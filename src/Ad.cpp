@@ -155,27 +155,25 @@ struct Ad : Module {
       "Stretch quantize", {"continuous", "quantized"}
     );
     
-    configInput(VPOCT_INPUT, "V/oct input");
-    configInput(FM_INPUT, "Frequency modulation input");
-    configInput(NPARTIALS_INPUT, "Number of partials modulation input");
-    configInput(LOWESTPARTIAL_INPUT, "Lowest partial modulation input");
-    configInput(STRETCH_INPUT, "Stereo stretch modulation input");
-    configInput(POWER_INPUT, "Power modulation input");
-    configInput(SIEVE_INPUT, "Sieve modulation input");
-    configInput(SAMPLE_INPUT, "CV sampling input");
-    configInput(SAMPLE_AMOUNT_INPUT, "CV sampling amount input");
-    configInput(SAMPLE_SPEED_INPUT, "CV sampling rate input");
-    configInput(WIDTH_INPUT, "Width modulation input");
-    configInput(AMP_INPUT, "Amp modulation input");
-    configInput(AUX_PARTIAL_INPUT,
-      "Auxiliary sine partial modulation input"
-    );
-    configInput(AUX_AMP_INPUT, "Auxiliary sine amp modulation input");
+    configInput(VPOCT_INPUT, "V/oct");
+    configInput(FM_INPUT, "Frequency modulation");
+    configInput(NPARTIALS_INPUT, "Number of partials modulation");
+    configInput(LOWESTPARTIAL_INPUT, "Lowest partial modulation");
+    configInput(STRETCH_INPUT, "Stereo stretch modulation");
+    configInput(POWER_INPUT, "Power modulation");
+    configInput(SIEVE_INPUT, "Sieve modulation");
+    configInput(SAMPLE_INPUT, "CV sampling");
+    configInput(SAMPLE_AMOUNT_INPUT, "CV sampling amount");
+    configInput(SAMPLE_SPEED_INPUT, "CV sampling rate");
+    configInput(WIDTH_INPUT, "Width modulation");
+    configInput(AMP_INPUT, "Amp modulation");
+    configInput(AUX_PARTIAL_INPUT, "Auxiliary sine partial modulation");
+    configInput(AUX_AMP_INPUT, "Auxiliary sine amp modulation");
     
-    configOutput(SUM_L_OUTPUT, "Sum left output");
-    configOutput(SUM_R_OUTPUT, "Sum right output");
-    configOutput(SAMPLE_TR_OUTPUT, "CV sampling trigger output");
-    configOutput(AUX_OUTPUT, "Auxiliary sine output");
+    configOutput(SUM_L_OUTPUT, "Sum left");
+    configOutput(SUM_R_OUTPUT, "Sum right");
+    configOutput(SAMPLE_TR_OUTPUT, "CV sampling trigger");
+    configOutput(AUX_OUTPUT, "Auxiliary sine");
   }
   
   void process(const ProcessArgs &args) override {
