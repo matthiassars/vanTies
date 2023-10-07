@@ -3,7 +3,7 @@
 // for VCV Rack
 // version 2.1.0
 // Author: Matthias Sars
-// matthiassars.eu
+// http://www.matthiassars.eu
 // https://github.com/matthiassars/vanTies
 
 #include <math.h>
@@ -13,26 +13,36 @@
 
 #include "plugin.hpp"
 
-#define HP 5.08
-#define Y2 5.*HP
-#define Y3 9.*HP
-#define Y4 13.*HP
-#define Y5 17.*HP
-#define Y6 21.*HP
+#define HP 5.08f
+#define Y2 5.f*HP
+#define Y3 9.f*HP
+#define Y4 13.f*HP
+#define Y5 17.f*HP
+#define Y6 21.f*HP
 #define NOSCS 128
 
 using namespace std;
 
 float sin2Pi (float x) {
-  float y = sin(6.283185307*x);
+  float y = sinf(6.28318530717958647693f*x);
+//  // Bhaskara I's sine approximation formula
+//  float y;
+//  if (x < .5) {
+//    float A = x*(.5f-x);
+//    y = 4.f*A/(.3125f-A); // 5/16 = .3125
+//  }
+//  else {
+//    float A = (x-.5f)*(x-1.f);
+//    y = 4.f*A/(.3125f+A);
+//  }
+  return(y);
+}
+float cos2Pi (float x) {
+  float y = cosf(6.28318530717958647693f*x);
   return(y);
 }
 
 struct Ad : Module {
-  // array of phase parameters for each partial + the auxiliary sine ([0]),
-  // for each of the 16 polyphony channels. Initialize on all 0s
-  float phase [NOSCS+1][16] = {};
-  
   int prime [32] = {
     2, 3, 5, 7, 11, 13, 17, 19, 23, 29,
     31, 37, 41, 43, 47, 53, 59, 61, 67, 71,
@@ -44,6 +54,13 @@ struct Ad : Module {
   // we need these vectors for that
   vector<int> leftPartials {4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 120, 124, 128, 15, 27, 39, 51, 63, 75, 87, 99, 111, 123, 35, 65, 95, 125, 77, 119, 2, 5, 11, 17, 23, 31, 41, 47, 59, 67, 73, 83, 97, 103, 109, 127};
   vector<int> rightPartials {6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82, 86, 90, 94, 98, 102, 106, 110, 114, 118, 122, 126, 9, 21, 33, 45, 57, 69, 81, 93, 105, 117, 25, 55, 85, 115, 49, 91, 121, 3, 7, 13, 19, 29, 37, 43, 53, 61, 71, 79, 89, 101, 107, 113};
+  
+  // array of phase parameters for each partial + the auxiliary sine ([0]),
+  // for each of the 16 polyphony channels. Initialize on all 0s
+  double phase [16] = {};
+  double phase2 [16] = {};
+  double stretchPhase [16] = {};
+  double auxPhase [16] = {};
   
   float buffer [NOSCS][16] = {};
   float bufferCont [NOSCS][16] = {};
@@ -109,40 +126,41 @@ struct Ad : Module {
   Ad() {
     config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
     
-    configParam(OCTAVE_PARAM, -1., 6., 4., "Octave");
-    configParam(PITCH_PARAM, 0., 12., 9., "Pitch");
-    configParam(STRETCH_PARAM, 0., 14., 7., "Stretch");
-    configParam(FMAMT_PARAM, 0., 1., 0., "FM amount");
+    configParam(OCTAVE_PARAM, -1.f, 6.f, 4.f, "Octave");
+    configParam(PITCH_PARAM, 0.f, 12.f, 9.f, "Pitch");
+    configParam(STRETCH_PARAM, 0.f, 2.f, 1.f, "Stretch");
+    configParam(FMAMT_PARAM, 0.f, 1.f, 0.f, "FM amount");
     configParam(
-      NPARTIALS_PARAM, 0., 7., 0., "Number of partials"
+      NPARTIALS_PARAM, 0.f, 7.f, 0.f, "Number of partials"
     );
     configParam(
-      LOWESTPARTIAL_PARAM, 0., 7., 0., "Lowest partial"
+      LOWESTPARTIAL_PARAM, 0.f, 6.f, 0.f, "Lowest partial"
     );
-    configParam(POWER_PARAM, -3., 1., -1., "Power");
-    configParam(SIEVE_PARAM, -5., 5., 0., "Sieve");
-    configParam(SAMPLE_AMOUNT_PARAM, 0., 1., 0., "CV sampling amount");
-    configParam(SAMPLE_SPEED_PARAM, -10., 10., 0., "CV sampling rate");
-    configParam(WIDTH_PARAM, -1., 1., 0., "Stereo width");
-    configParam(AMP_PARAM, 0., 1., 1., "Amp");
+    configParam(POWER_PARAM, -3.f, 1.f, -1.f, "Power");
+    configParam(SIEVE_PARAM, -5.f, 5.f, 0.f, "Sieve");
+    configParam(SAMPLE_AMOUNT_PARAM, 0.f, 1.f, 0.f, "CV sampling amount");
+    configParam(SAMPLE_SPEED_PARAM, -10.f, 10.f, 0.f, "CV sampling rate");
+    configParam(WIDTH_PARAM, -1.f, 1.f, 0.f, "Stereo width");
+    configParam(AMP_PARAM, 0.f, 1.f, 1.f, "Amp");
     configParam(
-      NPARTIALS_ATT_PARAM, -1., 1., 0., "Number of partials modulation"
+      NPARTIALS_ATT_PARAM, -1.f, 1.f, 0.f, "Number of partials modulation"
     );
     configParam(
-      LOWESTPARTIAL_ATT_PARAM, 0., 1., 0., "Lowest partial modulation"
+      LOWESTPARTIAL_ATT_PARAM, -1.f, 1.f, 0.f, "Lowest partial modulation"
     );
-    configParam(STRETCH_ATT_PARAM, -1., 1., 0., "Stretch modulation");
-    configParam(POWER_ATT_PARAM, -1., 1., 0., "Power modulation");
-    configParam(SIEVE_ATT_PARAM, -1., 1., 0., "Sieve modulation");
-    configParam(SAMPLE_ATT_PARAM, 0., 2., 1., "Sample amp");
-    configParam(SAMPLE_AMOUNT_ATT_PARAM, -1., 1., 0.,
+    configParam(STRETCH_ATT_PARAM, -1.f, 1.f, 0.f, "Stretch modulation");
+    configParam(POWER_ATT_PARAM, -1.f, 1.f, 0.f, "Power modulation");
+    configParam(SIEVE_ATT_PARAM, -1.f, 1.f, 0.f, "Sieve modulation");
+    configParam(SAMPLE_ATT_PARAM, 0.f, 2.f, 1.f, "Sample amp");
+    configParam(SAMPLE_AMOUNT_ATT_PARAM, -1.f, 1.f, 0.f,
       "CV sampling amount modulation");
-    configParam(SAMPLE_SPEED_ATT_PARAM, -1., 1., 0.,
+    configParam(SAMPLE_SPEED_ATT_PARAM, -1.f, 1.f, 0.f,
       "CV sampling rate modulation");
-    configParam(WIDTH_ATT_PARAM, 0., 1., 0., "Stereo width modulation");
-    configParam(AMP_ATT_PARAM, -1., 1., 0., "Amp modulation");
-    configParam(AUX_PARTIAL_PARAM, -2., 4., 1., "Auxiliary sine partial");
-    configParam(AUX_AMP_PARAM, 0., 1., 1., "Auxiliary sine amp");
+    configParam(WIDTH_ATT_PARAM, 0.f, 1.f, 0.f, "Stereo width modulation");
+    configParam(AMP_ATT_PARAM, -1.f, 1.f, 0.f, "Amp modulation");
+    configParam(AUX_PARTIAL_PARAM, -2.f, 4.f, 1.f,
+      "Auxiliary sine partial");
+    configParam(AUX_AMP_PARAM, 0.f, 1.f, 1.f, "Auxiliary sine amp");
     
     paramQuantities[OCTAVE_PARAM]->snapEnabled = true;
     paramQuantities[AUX_PARTIAL_PARAM]->snapEnabled = true;
@@ -151,7 +169,7 @@ struct Ad : Module {
     getParamQuantity(AUX_AMP_PARAM)->randomizeEnabled = false;
     
     configSwitch(
-      STRETCH_QUANTIZE_PARAM, 0., 1., 0.,
+      STRETCH_QUANTIZE_PARAM, 0.f, 1.f, 0.f,
       "Stretch quantize", {"continuous", "quantized"}
     );
     
@@ -185,14 +203,8 @@ struct Ad : Module {
     outputs[AUX_OUTPUT].setChannels(nChannels);
     
     bool stretchQuantize
-      = (params[STRETCH_QUANTIZE_PARAM].getValue() > 0.);
+      = (params[STRETCH_QUANTIZE_PARAM].getValue() > 0.f);
 
-    if (stretchQuantize) {
-      paramQuantities[STRETCH_PARAM]->snapEnabled = true;
-    } else {
-      paramQuantities[STRETCH_PARAM]->snapEnabled = false;
-    }
-    
     for (int c=0; c<nChannels; c++) {
       float stretch = params[STRETCH_PARAM].getValue() ;
       float octave = params[OCTAVE_PARAM].getValue();
@@ -206,99 +218,114 @@ struct Ad : Module {
        
       float fm = inputs[FM_INPUT].getPolyVoltage(c);
       fm *= params[FMAMT_PARAM].getValue();
-      float sample = inputs[SAMPLE_INPUT].getPolyVoltage(c);
-      sample *= params[SAMPLE_ATT_PARAM].getValue()*.1;
-
+      
       stretch += inputs[STRETCH_INPUT].getPolyVoltage(c)
-        *params[STRETCH_ATT_PARAM].getValue()*1.4;
+        *params[STRETCH_ATT_PARAM].getValue()*.2f;
       octave += inputs[VPOCT_INPUT].getPolyVoltage(c);
       nPartials += inputs[NPARTIALS_INPUT].getPolyVoltage(c)
-        *params[NPARTIALS_ATT_PARAM].getValue()*.7;
-      lowestPartial += inputs[LOWESTPARTIAL_PARAM].getPolyVoltage(c)
-        *params[LOWESTPARTIAL_ATT_PARAM].getValue()*.7;
+        *params[NPARTIALS_ATT_PARAM].getValue()*.7f;
+      lowestPartial += inputs[LOWESTPARTIAL_INPUT].getPolyVoltage(c)
+        *params[LOWESTPARTIAL_ATT_PARAM].getValue()*.6f;
       sampleSpeed += inputs[SAMPLE_SPEED_INPUT].getPolyVoltage(c)
-        *params[SAMPLE_SPEED_ATT_PARAM].getValue()*2.;
+        *params[SAMPLE_SPEED_ATT_PARAM].getValue()*2.f;
       amp += inputs[AMP_INPUT].getPolyVoltage(c)
-        *params[AMP_ATT_PARAM].getValue()*.1;
-      auxAmp += inputs[AUX_AMP_INPUT].getPolyVoltage(c)*.1;
-      auxPartial += inputs[AUX_PARTIAL_INPUT].getPolyVoltage(c)*.8;
+        *params[AMP_ATT_PARAM].getValue()*.1f;
+      auxAmp += inputs[AUX_AMP_INPUT].getPolyVoltage(c)*.1f;
+      auxPartial += inputs[AUX_PARTIAL_INPUT].getPolyVoltage(c)*.8f;
       
-      // We quantize the stretch parameter to to the consonant intervals
+      // quantize the stretch parameter to to the consonant intervals
       // in just intonation:
       if (stretchQuantize) {
-        stretch = round(stretch);
-        float y = floor(stretch/7.);
-        float x = stretch - 7.*y;
-        if (x == 0) { stretch = 0. + y ;} // prime
-        else if (x == 1) { stretch = .2 + y; } // minor third
-        else if (x == 2) { stretch = .25 + y; } // major third
-        else if (x == 3) { stretch = .333333333 + y; } // perfect fourth
-        else if (x == 4) { stretch = .5 + y; } // perfect fifth
-        else if (x == 5) { stretch = .6 + y; } // minor sixth
-        else if (x == 6) { stretch = .666666667 + y; } // major sixth
-      } else {
-        stretch *= .142857143; // /7
+        stretch += 1.f;
+        bool stretchNegative = false;
+        if (stretch<0.f) {
+          stretch = -stretch;
+          stretchNegative = true;
+        }
+        float stretchOctave = exp2(floor(log2(abs(stretch))));
+        stretch /= stretchOctave;
+        if (stretch < 1.095445115f) { // sqrt(6/5)
+          stretch = 1.f; // prime
+        }
+        else if (stretch < 1.224744871f ) { // sqrt(6/4)
+          stretch = 1.2f; // 6/5, minor third
+        }
+        else if (stretch < 1.290994449f ) { // sqrt(5/3)
+          stretch = 1.25f; // 5/4, major third
+        }
+        else if (stretch < 1.414213562f ) { // sqrt(2)
+          stretch = 1.333333333f; // 4/3 perfect fourth
+        }
+        else if (stretch < 1.549193338f ) { // sqrt(12/5)
+          stretch = 1.5f; // 3/2 perfect fifth
+        }
+        else if (stretch < 1.632993162f ) { // sqrt(8/3)
+          stretch = 1.6f; // 8/5 minor sixth
+        }
+        else if (stretch < 1.825741858f ) { // sqrt(10/3)
+          stretch = 1.67f; // 5/3 major sixth
+        }
+        else { stretch = 2.f; } // octave
+        stretch *= stretchOctave;
+        if (stretchNegative) { stretch = -stretch; }
+        stretch -= 1.f;
       }
       
       // Compute the pitch an the fundamental frequency
       // (Ignore FM for a moment)
-      pitch -= 9.;
-      pitch *= .083333333; // /12
-      octave -= 4.;
+      pitch -= 9.f;
+      pitch *= .083333333f; // /12
+      octave -= 4.f;
       pitch += octave;
-      float freq = 440. * exp2(pitch);
+      float freq = 440.f * exp2(pitch);
       
       // an array of freqencies for every partial
       // and the auxiliary sine ([0])
       float partialFreq [NOSCS+1];
       // Compute the frequency for the auxiliary sine
       auxPartial = round(auxPartial);
-      if (auxPartial < .5) { // for sub-partials:
-        auxPartial = 2.-auxPartial;
-        partialFreq[0] = freq / ( 1. + (auxPartial-1.)*stretch );
+      if (auxPartial < .5f) { // for sub-partials:
+        auxPartial = 2.f-auxPartial;
+        partialFreq[0] = freq / ( 1.f + (auxPartial-1.f)*stretch );
       } else { // for ordinary partials
-        partialFreq[0] = freq * ( 1. + (auxPartial-1.)*stretch );
+        partialFreq[0] = freq * ( 1.f + (auxPartial-1.f)*stretch );
       }
       // FM
-      freq *= 1. + fm;
+      freq *= 1.f + fm;
       for (int i=1; i<NOSCS+1; i++) {
-        partialFreq[i] = ( 1. + (i-1.)*stretch ) * freq;
+        partialFreq[i] = ( 1.f + (i-1.f)*stretch ) * freq;
       }
       
       // exponential mapping for nPartials and lowestPartial
       nPartials = exp2(nPartials);
       lowestPartial = exp2(lowestPartial);
       float highestPartial = lowestPartial + nPartials;
-      // We do not want to include partials oscillating faster than half
-      // the sample rate (Nyquist frequency)
-      if ( 2.*abs(stretch*freq*highestPartial) > args.sampleRate ) {
-        highestPartial = abs(args.sampleRate/freq/stretch)*.5;
+      // exclude partials oscillating faster than the Nyquist frequency
+      if ( 2.f*abs(stretch*freq*highestPartial) > args.sampleRate ) {
+        highestPartial = abs(args.sampleRate/freq/stretch)*.5f;
       }
-      lowestPartial = clamp(lowestPartial, 1., (float)NOSCS);
+      lowestPartial = clamp(lowestPartial, 1.f, (float)NOSCS);
       highestPartial = clamp(highestPartial, lowestPartial, (float)NOSCS);
       
       // integer parts of lowestPartial and highestPartial
-      int lowestPartialI = floor(lowestPartial);
-      int highestPartialI = floor(highestPartial);
+      int lowestPartialI = (int)lowestPartial;
+      int highestPartialI = (int)highestPartial;
       
       // fade factors for the lowest and highest partials
-      float fadeLowest = lowestPartialI - lowestPartial + 1.;
+      float fadeLowest = lowestPartialI - lowestPartial + 1.f;
       float fadeHighest = highestPartial - highestPartialI;
       if (lowestPartialI == highestPartialI) {
         fadeLowest = highestPartial - lowestPartial;
-        fadeHighest = 1.;
+        fadeHighest = 1.f;
       }
       
-      float auxWave = 0.;
-      float overtoneWaveLeft = 0.;
-      float overtoneWaveRight = 0.;
+      float auxWave = 0.f;
       // [0] and [1] are for the the left and right outputs
       float wave [2] = {}; 
-      float sampleTr = 0.;
-      float fundamentalWave = 0.;
+      float sampleTr = 0.f;
       
       if ( (outputs[SUM_L_OUTPUT].isConnected()
-        || outputs[SUM_R_OUTPUT].isConnected() ) && amp != 0.
+        || outputs[SUM_R_OUTPUT].isConnected() ) && amp != 0.f
       ) {
         float power = params[POWER_PARAM].getValue();
         float sieve = params[SIEVE_PARAM].getValue();
@@ -306,145 +333,162 @@ struct Ad : Module {
         float width = params[WIDTH_PARAM].getValue();
         
         power += params[POWER_ATT_PARAM].getValue()
-          *inputs[POWER_INPUT].getPolyVoltage(c)*.4;
+          *inputs[POWER_INPUT].getPolyVoltage(c)*.4f;
         sieve += params[SIEVE_ATT_PARAM].getValue()
           *inputs[SIEVE_INPUT].getPolyVoltage(c);
         sampleAmount += inputs[SAMPLE_AMOUNT_INPUT].getPolyVoltage(c)
-          *params[SAMPLE_AMOUNT_ATT_PARAM].getValue()*.1;
+          *params[SAMPLE_AMOUNT_ATT_PARAM].getValue()*.1f;
         width += inputs[WIDTH_INPUT].getPolyVoltage(c)
-          *params[WIDTH_ATT_PARAM].getValue()*.2;
+          *params[WIDTH_ATT_PARAM].getValue()*.2f;
  
-        // We put the amplitudes of the partials in an array
+        // put the amplitudes of the partials in an array
         // The nonzero ones are determined by the power law,
         // set by the power parameter
-        float partialAmp [NOSCS+1] = {};
+        float partialAmpLeft [NOSCS+1] = {};
+        float partialAmpRight [NOSCS+1] = {};
         for (int i = lowestPartialI; i<highestPartialI+1; i++) {
-          partialAmp[i] = pow(i, power);
+          partialAmpLeft[i] = pow(i, power);
         }
         
-        partialAmp[lowestPartialI] *= fadeLowest;
-        partialAmp[highestPartialI] *= fadeHighest;
+        partialAmpLeft[lowestPartialI] *= fadeLowest;
+        partialAmpLeft[highestPartialI] *= fadeHighest;
         
         // normalize the amplitudes and simultaneously apply the CV buffer
-        float sumAmp = 0.;
-        sampleAmount = clamp(sampleAmount, 0., 1.);
+        float sumAmp = 0.f;
+        sampleAmount = clamp(sampleAmount, 0.f, 1.f);
         for (int i=lowestPartialI; i<highestPartialI+1; i++) {
-          sumAmp += partialAmp[i];
-          partialAmp[i] *= 1. + (bufferCont[i-1][c]-1.)*sampleAmount;
+          sumAmp += partialAmpLeft[i];
+          partialAmpLeft[i] *= 1.f + (bufferCont[i-1][c]-1.f)*sampleAmount;
         }
-        if (sumAmp != 0.) {
+        if (sumAmp != 0.f) {
           for (int i=lowestPartialI; i<highestPartialI+1; i++) {
-            partialAmp[i] /= sumAmp;
+            partialAmpLeft[i] /= sumAmp;
           }
         }
         
         // for the case nPartials < 1:
-        if (highestPartial - lowestPartial < 1.) {
-          partialAmp[lowestPartialI] *= highestPartial - lowestPartial;
-          partialAmp[lowestPartialI+1] *= highestPartial - lowestPartial;
+        if (highestPartial - lowestPartial < 1.f) {
+          partialAmpLeft[lowestPartialI]
+            *= highestPartial - lowestPartial;
+          partialAmpLeft[lowestPartialI+1]
+            *= highestPartial - lowestPartial;
         }
         
-        sieve = clamp(sieve, -5., 5.);
-        // We apply the Sieve of Eratosthenes
+        sieve = clamp(sieve, -5.f, 5.f);
+        // apply the Sieve of Eratosthenes
         // map sieve such that sieve -> a*(b^sieve-1), such that:
-        // for the negative side: -5->31 (because prime[31]=127) and -2->1
-        // for the positive side: 2->1; 5->5 (because prime[5]=11)
+        // for the negative side: -5->31 (because prime[30]=127) and -2->1
+        // for the positive side: 2->1; 5->5 (because prime[4]=11)
         // The integer sieveMode is going to be 1 if we want to sieve the
         // primes and 2 if we want to keep them
         int sieveMode = 2;
-        if (sieve<0.) {
-          sieve = .12254291453906*(pow(.330401968524730,sieve)-1.);
+        if (sieve<0.f) {
+          sieve = .12254291453906f*(pow(.330401968524730f,sieve)-1.f);
           sieveMode = 1;
-          // 2*16^(-2/3)*((16^(-1/3))^x-1)
         } else {
-          sieve= .87702350749419*(pow(1.46294917622634,sieve)-1.);
+          sieve= .87702350749419f*(pow(1.46294917622634f,sieve)-1.f);
         }
-        int sieveI = floor(sieve);
-        float sieveFade = sieveI + 1. - sieve;
-        // loop over al prime numbers up to the one given by the
+        int sieveI = (int)sieve;
+        float sieveFade = sieveI + 1.f - sieve;
+        // loop over all prime numbers up to the one given by the
         // sieve parameter
         for (int i=0; i<sieveI; i++) {
-          // loop over all proper multiples of that prime
+          // loop over all (proper) multiples of that prime
+          // and sieve those out
           for (int j=sieveMode; j*prime[i]<highestPartialI+1; j++) {
-            partialAmp[j*prime[i]] = 0.;
+            partialAmpLeft[j*prime[i]] = 0.f;
           }
         }
         for (int j=sieveMode; j*prime[sieveI]<highestPartialI+1; j++) {
-          partialAmp[j*prime[sieveI]] *= sieveFade;
+          partialAmpLeft[j*prime[sieveI]] *= sieveFade;
         }
         
-        // Compute the wave output by summing over the partials, first the
-        // overtones for the left and right side and the fundamental
-        // seperately
-        if (partialAmp[1] != 0.) {
-          fundamentalWave = partialAmp[1] * sin2Pi(phase[1][c]);
+        width = clamp(width, -1.f, 1.f);
+        for (int i=lowestPartialI; i<highestPartialI+1; i++) {
+          partialAmpRight[i] = partialAmpLeft[i];
         }
-        for (int i : leftPartials) {
-          if (partialAmp[i] != 0.) {
-            overtoneWaveLeft += partialAmp[i] * sin2Pi(phase[i][c]);
-          }
+        if (width > 0.f) {
+          for (int i : leftPartials) { partialAmpRight[i] *= 1.f-width; }
+          for (int i : rightPartials) { partialAmpLeft[i] *= 1.f-width; }
         }
-        for (int i : rightPartials) {
-          if (partialAmp[i] != 0.) {
-            overtoneWaveRight += partialAmp[i] * sin2Pi(phase[i][c]);
-          }
+        else if (width < 0.f) {
+          for (int i : leftPartials) { partialAmpLeft[i] *= 1.f+width; }
+          for (int i : rightPartials) { partialAmpRight[i] *= 1.f+width; }
+        }
+
+        // Compute the wave output by using the identity
+        // sin(a+b) = 2*sin(a)*cos(b) - sin(a-b)
+        // sin((1+(i+1)*stretch)*phase)
+        //   = 2*sin((1+i*s)*phase)*cos(stretch*phase)
+        //     - sin((1+(i-1)*streth)*phase) 
+        // sine[i] := sin2Pi((1+i*stretch)*phase)
+        // sine[i+1] = 2*sine[i]*cos(stretch*phase)-sine[i-1]
+        float sine[highestPartialI] = {};
+        sine[0] = sin2Pi(phase[c]);
+        sine[1] = sin2Pi(phase2[c]);
+        float cosine = cos2Pi(stretchPhase[c]);
+        for (int i=2; i<highestPartialI; i++) {
+          sine[i] = 2.f*sine[i-1]*cosine - sine[i-2];
+        }
+        for (int i=1; i<highestPartialI+1; i++) {
+          // Left and right are flipped for odd channels
+          wave[c%2] += partialAmpLeft[i] * sine[i-1];
+          wave[(c+1)%2] += partialAmpRight[i] * sine[i-1];
         }
         
-        width = clamp(width, -1., 1.);
-        
-        // Sum the fundamental, left and right wave
-        // Left and right are flipped for odd channels
-        wave[c%2] = fundamentalWave
-          + min((1.+width),1.)*overtoneWaveLeft
-          + min((1.-width),1.)*overtoneWaveRight;
-        wave[(c+1)%2] = fundamentalWave
-          + min((1.-width),1.)*overtoneWaveLeft
-          + min((1.+width),1.)*overtoneWaveRight;
         // a factor 5, because we want 10V pp
-        wave[0] *= 5.*amp;
-        wave[1] *= 5.*amp;
+        amp *= 5.f;
+        wave[0] *= amp;
+        wave[1] *= amp;
       }
       
       // compute the auxiliary sine wave
-      if (outputs[AUX_OUTPUT].isConnected() && auxAmp != 0.) {
-        auxWave = sin2Pi(phase[0][c]);
-        auxWave *= 5.*auxAmp;
-        auxWave = clamp(auxWave, -10., 10.);
+      if (outputs[AUX_OUTPUT].isConnected() && auxAmp != 0.f) {
+        auxWave = sin2Pi(auxPhase[c]);
+        auxWave *= 5.f*auxAmp;
+        auxWave = clamp(auxWave, -10.f, 10.f);
       }
       
-      // Accumulate the phases or reset them if both amps are 0
-      // or all three audio outputs are disconnected
       if (
-        ( amp == 0. && auxAmp == 0. )
+        ( amp == 0.f && auxAmp == 0.f )
         || (
           !outputs[SUM_L_OUTPUT].isConnected()
           && !outputs[SUM_R_OUTPUT].isConnected()
           && !outputs[AUX_OUTPUT].isConnected()
         )
       ) {
-        for (int i=0; i<NOSCS+1; i++) {
-          phase[i][c] = 0.;
-        }
-      } else for (int i=0; i<NOSCS+1; i++) {
-        // accumulate
-        phase[i][c] += partialFreq[i] * args.sampleTime;
+        // reset the phases if both amps are 0
+        // or all three audio outputs are disconnected
+        phase[c] = 0.f;
+        phase2[c] = 0.f;
+        stretchPhase[c] = 0.f;
+        auxPhase[c] = 0.f;
+      } else {
+        // accumulate the phases
+        phase[c] += partialFreq[1] * args.sampleTime;
+        phase2[c] += partialFreq[2] * args.sampleTime;
+        stretchPhase[c] += stretch * partialFreq[1] * args.sampleTime;
+        auxPhase[c] += partialFreq[0] * args.sampleTime;
         // make sure that 0 <= phase < 1
-        phase[i][c] -= floor(phase[i][c]);
+        phase[c] -= floor(phase[c]);
+        phase2[c] -= floor(phase2[c]);
+        stretchPhase[c] -= floor(stretchPhase[c]);
+        auxPhase[c] -= floor(auxPhase[c]);
       }
       
       // exponential mapping for sampleSpeed,
       // except for a linear mapping around 0
-      if (sampleSpeed < -1.) { sampleSpeed = -exp2(-sampleSpeed-2.); }
-      else if (sampleSpeed < 1.) { sampleSpeed *= 0.5; }
-      else { sampleSpeed = exp2(sampleSpeed-2.); }
-      float bufferMaxWait = 1.;
-      if (sampleSpeed != 0.) {
+      if (sampleSpeed < -1.f) { sampleSpeed = -exp2(-sampleSpeed-2.f); }
+      else if (sampleSpeed < 1.f) { sampleSpeed *= .5f; }
+      else { sampleSpeed = exp2(sampleSpeed-2.f); }
+      float bufferMaxWait = 1.f;
+      if (sampleSpeed != 0.f) {
         bufferMaxWait = abs(args.sampleRate/sampleSpeed);
       }
       
       // send a trigger out trigger if a sampling occurs
-      if (2*bufferWait[c] < bufferMaxWait) { sampleTr = 5.; }
-      if (sampleSpeed > 0.) {
+      if (2*bufferWait[c] < bufferMaxWait) { sampleTr = 5.f; }
+      if (sampleSpeed > 0.f) {
         // accumulate bufferWait
         bufferWait[c]++;
         // every bufferMaxWait steps: move the pointer, reset bufferWait
@@ -453,17 +497,21 @@ struct Ad : Module {
           bufferPosition[c] += NOSCS;
           bufferPosition[c]--;
           bufferPosition[c] %= NOSCS;
+          float sample = inputs[SAMPLE_INPUT].getPolyVoltage(c);
+          sample *= params[SAMPLE_ATT_PARAM].getValue()*.1f;
           buffer[
             (bufferPosition[c]+lowestPartialI) % NOSCS
           ][c] = sample;
          bufferWait[c] = 0;
         }
-      } else if (sampleSpeed < 0.) {
+      } else if (sampleSpeed < 0.f) {
         bufferWait[c]++;
         if (bufferWait[c] > bufferMaxWait) {
           bufferPosition[c]++;
           bufferPosition[c] %= NOSCS;
-          buffer[
+          float sample = inputs[SAMPLE_INPUT].getPolyVoltage(c);
+          sample *= params[SAMPLE_ATT_PARAM].getValue()*.1f;
+           buffer[
             (bufferPosition[c]+highestPartialI) % NOSCS
           ][c] = sample;
          bufferWait[c] = 0;
@@ -471,12 +519,12 @@ struct Ad : Module {
       }
       // Make a continuous version of the sample
       // (The factor 0.5 is determined experimentally)
-      if (sampleSpeed != 0.) {
-        float bufferMaxWaitInv = 1./bufferMaxWait;
+      if (sampleSpeed != 0.f) {
+        float bufferMaxWaitInv = 1.f/bufferMaxWait;
         for (int i=0; i < NOSCS; i++) {
           bufferCont[i][c]
             += (buffer[(bufferPosition[c]+i+1)%NOSCS][c]-bufferCont[i][c])
-              *bufferMaxWaitInv*.5;
+              *bufferMaxWaitInv*.5f;
         }
       }
       
@@ -509,136 +557,136 @@ struct AdWidget : ModuleWidget {
     ));
     
     addParam(createParamCentered<RoundBlackKnob>(
-      mm2px(Vec(8.*HP, Y3)), module, Ad::STRETCH_PARAM
+      mm2px(Vec(8.f*HP, Y3)), module, Ad::STRETCH_PARAM
     ));
     addParam(createParamCentered<RoundBlackKnob>(
-      mm2px(Vec(11.*HP, Y2)), module, Ad::OCTAVE_PARAM
+      mm2px(Vec(11.f*HP, Y2)), module, Ad::OCTAVE_PARAM
     ));
     addParam(createParamCentered<RoundBlackKnob>(
-      mm2px(Vec(11.*HP, Y3)), module, Ad::PITCH_PARAM
+      mm2px(Vec(11.f*HP, Y3)), module, Ad::PITCH_PARAM
     ));
     addParam(createParamCentered<RoundBlackKnob>(
-      mm2px(Vec(14.*HP, Y3)), module, Ad::NPARTIALS_PARAM
+      mm2px(Vec(14.f*HP, Y3)), module, Ad::NPARTIALS_PARAM
     ));
     addParam(createParamCentered<RoundBlackKnob>(
-      mm2px(Vec(17.*HP, Y3)), module, Ad::LOWESTPARTIAL_PARAM
+      mm2px(Vec(17.f*HP, Y3)), module, Ad::LOWESTPARTIAL_PARAM
     ));
     addParam(createParamCentered<RoundBlackKnob>(
-      mm2px(Vec(20.*HP, Y3)), module, Ad::POWER_PARAM
+      mm2px(Vec(20.f*HP, Y3)), module, Ad::POWER_PARAM
     ));
     addParam(createParamCentered<RoundBlackKnob>(
-      mm2px(Vec(23.*HP, Y3)), module, Ad::SIEVE_PARAM
+      mm2px(Vec(23.f*HP, Y3)), module, Ad::SIEVE_PARAM
     ));
     addParam(createParamCentered<RoundBlackKnob>(
-      mm2px(Vec(26.*HP, Y3)), module, Ad::SAMPLE_AMOUNT_PARAM
+      mm2px(Vec(26.f*HP, Y3)), module, Ad::SAMPLE_AMOUNT_PARAM
     ));
     addParam(createParamCentered<RoundBlackKnob>(
-      mm2px(Vec(29.*HP, Y3)), module, Ad::SAMPLE_SPEED_PARAM
+      mm2px(Vec(29.f*HP, Y3)), module, Ad::SAMPLE_SPEED_PARAM
     ));
     addParam(createParamCentered<RoundBlackKnob>(
-      mm2px(Vec(32.*HP, Y3)), module, Ad::WIDTH_PARAM
+      mm2px(Vec(32.f*HP, Y3)), module, Ad::WIDTH_PARAM
     ));
     addParam(createParamCentered<RoundBlackKnob>(
-      mm2px(Vec(35.*HP, Y3)), module, Ad::AMP_PARAM
+      mm2px(Vec(35.f*HP, Y3)), module, Ad::AMP_PARAM
     ));
     addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(8.*HP, Y4)), module, Ad::STRETCH_ATT_PARAM
+      mm2px(Vec(8.f*HP, Y4)), module, Ad::STRETCH_ATT_PARAM
     ));
     addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(11.*HP, Y4)), module, Ad::FMAMT_PARAM
+      mm2px(Vec(11.f*HP, Y4)), module, Ad::FMAMT_PARAM
     ));
     addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(14.*HP, Y4)), module, Ad::NPARTIALS_ATT_PARAM
+      mm2px(Vec(14.f*HP, Y4)), module, Ad::NPARTIALS_ATT_PARAM
     ));
     addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(17.*HP, Y4)), module, Ad::LOWESTPARTIAL_ATT_PARAM
+      mm2px(Vec(17.f*HP, Y4)), module, Ad::LOWESTPARTIAL_ATT_PARAM
     ));
     addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(20.*HP, Y4)), module, Ad::POWER_ATT_PARAM
+      mm2px(Vec(20.f*HP, Y4)), module, Ad::POWER_ATT_PARAM
     ));
     addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(23.*HP, Y4)), module, Ad::SIEVE_ATT_PARAM
+      mm2px(Vec(23.f*HP, Y4)), module, Ad::SIEVE_ATT_PARAM
     ));
     addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(23.*HP, Y6)), module, Ad::SAMPLE_ATT_PARAM
-    ));
-     addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(26.*HP, Y4)), module, Ad::SAMPLE_AMOUNT_ATT_PARAM
+      mm2px(Vec(23.f*HP, Y6)), module, Ad::SAMPLE_ATT_PARAM
     ));
     addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(29.*HP, Y4)), module, Ad::SAMPLE_SPEED_ATT_PARAM
+      mm2px(Vec(26.f*HP, Y4)), module, Ad::SAMPLE_AMOUNT_ATT_PARAM
     ));
     addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(32.*HP, Y4)), module, Ad::WIDTH_ATT_PARAM
+      mm2px(Vec(29.f*HP, Y4)), module, Ad::SAMPLE_SPEED_ATT_PARAM
     ));
     addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(35.*HP, Y4)), module, Ad::AMP_ATT_PARAM
+      mm2px(Vec(32.f*HP, Y4)), module, Ad::WIDTH_ATT_PARAM
     ));
     addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(5.*HP, Y4)), module, Ad::AUX_PARTIAL_PARAM
+      mm2px(Vec(35.f*HP, Y4)), module, Ad::AMP_ATT_PARAM
     ));
     addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(2.*HP, Y4)), module, Ad::AUX_AMP_PARAM
+      mm2px(Vec(5.f*HP, Y4)), module, Ad::AUX_PARTIAL_PARAM
+    ));
+    addParam(createParamCentered<Trimpot>(
+      mm2px(Vec(2.f*HP, Y4)), module, Ad::AUX_AMP_PARAM
     ));
     
     addParam(createParamCentered<CKSS>(
-      mm2px(Vec(8.*HP, Y2)), module, Ad::STRETCH_QUANTIZE_PARAM
+      mm2px(Vec(8.f*HP, Y2)), module, Ad::STRETCH_QUANTIZE_PARAM
     ));
     
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(8.*HP, Y5)), module, Ad::STRETCH_INPUT
+      mm2px(Vec(8.f*HP, Y5)), module, Ad::STRETCH_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(11.*HP, Y6)), module, Ad::VPOCT_INPUT
+      mm2px(Vec(11.f*HP, Y6)), module, Ad::VPOCT_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(11.*HP, Y5)), module, Ad::FM_INPUT
+      mm2px(Vec(11.f*HP, Y5)), module, Ad::FM_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(14.*HP, Y5)), module, Ad::NPARTIALS_INPUT
+      mm2px(Vec(14.f*HP, Y5)), module, Ad::NPARTIALS_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(17.*HP, Y5)), module, Ad::LOWESTPARTIAL_INPUT
+      mm2px(Vec(17.f*HP, Y5)), module, Ad::LOWESTPARTIAL_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(20.*HP, Y5)), module, Ad::POWER_INPUT
+      mm2px(Vec(20.f*HP, Y5)), module, Ad::POWER_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(23.*HP, Y5)), module, Ad::SIEVE_INPUT
+      mm2px(Vec(23.f*HP, Y5)), module, Ad::SIEVE_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(26.*HP, Y6)), module, Ad::SAMPLE_INPUT
+      mm2px(Vec(26.f*HP, Y6)), module, Ad::SAMPLE_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(26.*HP, Y5)), module, Ad::SAMPLE_AMOUNT_INPUT
+      mm2px(Vec(26.f*HP, Y5)), module, Ad::SAMPLE_AMOUNT_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(29.*HP, Y5)), module, Ad::SAMPLE_SPEED_INPUT
+      mm2px(Vec(29.f*HP, Y5)), module, Ad::SAMPLE_SPEED_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(32.*HP, Y5)), module, Ad::WIDTH_INPUT
+      mm2px(Vec(32.f*HP, Y5)), module, Ad::WIDTH_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(35.*HP, Y5)), module, Ad::AMP_INPUT
+      mm2px(Vec(35.f*HP, Y5)), module, Ad::AMP_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(5.*HP, Y5)), module, Ad::AUX_PARTIAL_INPUT
+      mm2px(Vec(5.f*HP, Y5)), module, Ad::AUX_PARTIAL_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(2.*HP, Y5)), module, Ad::AUX_AMP_INPUT
+      mm2px(Vec(2.f*HP, Y5)), module, Ad::AUX_AMP_INPUT
     ));
     
     addOutput(createOutputCentered<PJ301MPort>(
-      mm2px(Vec(32.*HP, Y6)), module, Ad::SUM_L_OUTPUT
+      mm2px(Vec(32.f*HP, Y6)), module, Ad::SUM_L_OUTPUT
     ));
     addOutput(createOutputCentered<PJ301MPort>(
-      mm2px(Vec(35.*HP, Y6)), module, Ad::SUM_R_OUTPUT
-    ));
-     addOutput(createOutputCentered<PJ301MPort>(
-      mm2px(Vec(29.*HP, Y6)), module, Ad::SAMPLE_TR_OUTPUT
+      mm2px(Vec(35.f*HP, Y6)), module, Ad::SUM_R_OUTPUT
     ));
     addOutput(createOutputCentered<PJ301MPort>(
-      mm2px(Vec(2.*HP, Y6)), module, Ad::AUX_OUTPUT
+      mm2px(Vec(29.f*HP, Y6)), module, Ad::SAMPLE_TR_OUTPUT
+    ));
+    addOutput(createOutputCentered<PJ301MPort>(
+      mm2px(Vec(2.f*HP, Y6)), module, Ad::AUX_OUTPUT
     ));
   }
 };
