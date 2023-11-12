@@ -1,7 +1,7 @@
 // Ad
 // eratosthenean additive oscillator module
 // for VCV Rack
-// version 2.1.0
+// development version
 // Author: Matthias Sars
 // http://www.matthiassars.eu
 // https://github.com/matthiassars/vanTies
@@ -10,8 +10,11 @@
 #include <iostream>
 #include <iomanip>
 #include <vector>
+#include <array>
 
 #include "plugin.hpp"
+
+#define TWOPI 6.28318530717958647693f
 
 #define HP 5.08f
 #define Y2 5.f*HP
@@ -23,24 +26,183 @@
 
 using namespace std;
 
-float sin2Pi (float x) {
-  float y = sinf(6.28318530717958647693f*x);
-//  // Bhaskara I's sine approximation formula
-//  float y;
-//  if (x < .5) {
-//    float A = x*(.5f-x);
-//    y = 4.f*A/(.3125f-A); // 5/16 = .3125
-//  }
-//  else {
-//    float A = (x-.5f)*(x-1.f);
-//    y = 4.f*A/(.3125f+A);
-//  }
-  return(y);
-}
-float cos2Pi (float x) {
-  float y = cosf(6.28318530717958647693f*x);
-  return(y);
-}
+// a class for the additive oscillator
+class additiveOscillator {
+  private:
+    float sampleTime_ = 1.f/48000.f;
+    float stretch_ = 1.f;
+    // We need 3 phasors. In the "process" method we'll see why.
+    double phase_ = 0.f;
+    double stretchPhase_ = 0.f;
+    double phase2_ = 0.f;
+    float dPhase_ = 440.f*sampleTime_;
+    float dStretchPhase_ = dPhase_;
+    float dPhase2_ = 2.f*dPhase_;
+    float amp_ = 1.f;
+    // 2 waves for stereo
+    float waveLeft_ = 0.f;
+    float waveRight_ = 0.f;
+    int highestPartial_ = 2;
+  
+  public:
+    void setSampleTime (float sampleTime) {
+      sampleTime_ = sampleTime;
+    }
+    
+    void setFreq (float freq) {
+      dPhase_ = freq*sampleTime_;
+      dStretchPhase_ = stretch_*dPhase_;
+      dPhase2_ = dPhase_ + dStretchPhase_;
+    }
+    
+    void setStretch (float stretch) { stretch_ = stretch; }
+    
+    void setAmp (float amp) { amp_ = amp; }
+    
+    void setHighestPartial (int highestPartial) {
+      highestPartial_ = highestPartial;
+      if (highestPartial < 2) { highestPartial = 2; }
+    }
+    
+    // The process method takes two arrays as arguments.
+    // These contain the amplitudes of all the partials,
+    // one for the left channel and one for the right.
+    void process (float *partialAmpLeft, float *partialAmpRight) {
+      // We compute the waves in a smarter way than computing a bunch of
+      // sines bute force.
+      // We use the identity sin(a+b) = 2*sin(a)*cos(b) - sin(a-b):
+      // sin((1+(i+1)*stretch)*phase)
+      //   = 2*sin((1+i*s)*phase)*cos(stretch*phase)
+      //     - sin((1+(i-1)*stretch)*phase)
+      // So we can compute the sine iteratively.
+      // We define an array wich contains all the sines:
+      // sine[i] := sin2Pi((1+i*stretch)*phase) ,
+      // so using our identity, we can compute:
+      // sine[i+1] = 2*sine[i]*cos(stretch*phase)-sine[i-1]
+      // We have 3 independent phase paramaters: phase,
+      // phase2 := (1+stretch)*phase and stretchPase := stretch*phase
+      float sine[highestPartial_] = {};
+      sine[0] = sinf(TWOPI*phase_);
+      sine[1] = sinf(TWOPI*phase2_);
+      float cosine = cosf(TWOPI*stretchPhase_);
+      waveLeft_ = partialAmpLeft[0] * sine[0]
+        + partialAmpLeft[1] * sine[1];
+      waveRight_ = partialAmpRight[0] * sine[0]
+        + partialAmpRight[1] * sine[1];
+      for (int i=2; i<highestPartial_; i++) {
+        sine[i] = 2.f*sine[i-1]*cosine - sine[i-2];
+        waveLeft_ += partialAmpLeft[i] * sine[i];
+        waveRight_ += partialAmpRight[i] * sine[i];
+      }
+      waveLeft_ *= amp_;
+      waveRight_ *= amp_;
+      
+      // increment the phases
+      phase_ += dPhase_;
+      phase2_ += dPhase2_;
+      stretchPhase_ += dStretchPhase_;
+      phase_ -= floor(phase_);
+      phase2_ -= floor(phase2_);
+      stretchPhase_ -= floor(stretchPhase_);
+    }
+    
+    float getWaveLeft () { return waveLeft_; }
+    float getWaveRight () { return waveRight_; }
+    
+    void resetPhases() {
+      phase_ = 0.f;
+      phase2_ = 0.f;
+      stretchPhase_ = 0.f;
+      waveLeft_ = 0.f;
+      waveRight_ = 0.f;
+    }
+};
+
+class sineOscillator {
+  private:
+    float sampleTime_ = 1.f/48000.f;
+    double phase_ = 0.f;
+    float dPhase_ = 440.f*sampleTime_;
+    float amp_ = 1.f;
+    float wave_ = 0.f;
+
+  public:
+    void setSampleTime (float sampleTime) {
+      sampleTime_ = sampleTime;
+    }
+
+    void setFreq (float freq) {
+      dPhase_ = freq*sampleTime_;
+    }
+    
+    void setAmp (float amp) { amp_ = amp; }
+    
+    void process () {
+      wave_ = amp_*sinf(TWOPI*phase_);
+      phase_ += dPhase_;
+      phase_ -= floor(phase_);
+    }
+
+    float getWave () { return wave_; }
+
+    void resetPhase () {
+      phase_ = 0.f;
+      wave_ = 0.f;
+    }
+};
+
+class cvDrawer {
+  private:
+    array<float, NOSCS> value_;
+    array<float, NOSCS> valueNew_;
+    array<float, NOSCS> valueSmooth_;
+    int counter_ = 0;
+    float rate_ = 1.f;
+    float maxCounter_ = 1.f;
+    float sampleRate_ = 1.f/48000.f;
+    float balance_ = 0.f;
+
+  public:
+    void setSampleRate (float sampleRate) { sampleRate_ = sampleRate; }
+
+    void setRate (float rate) {
+      rate_ = rate;
+      if (rate == 0.f) { maxCounter_ = 0.f; }
+      else { maxCounter_ = sampleRate_/rate; }
+    }
+    
+    void setBalance (float balance) { balance_ = balance; }
+    
+    void process (float value) {
+      if ( maxCounter_ != 0.f) {
+        counter_++;
+        if (counter_ < maxCounter_) {
+          valueNew_[ (int)((float)NOSCS*(float)counter_/maxCounter_) ]
+            = value;
+        } else {
+          counter_ = 0;
+          value_ = valueNew_;
+        }
+      }
+      for (int i=0; i<NOSCS; i++) {
+        valueSmooth_[i]  += (value_[i]-valueSmooth_[i])
+          *rate_/sampleRate_*.5f;
+       }
+    }
+
+    float getTrigger () {
+      if (2*counter_ < maxCounter_) { return(10.f); }
+      else { return(0.f); }
+    }
+
+    float getValue (int i) {
+      return (balance_*valueSmooth_[i] + 1.f-balance_);
+    }
+};
+
+additiveOscillator osc [16];
+sineOscillator auxOsc [16];
+cvDrawer drawer [16];
 
 struct Ad : Module {
   int prime [32] = {
@@ -52,20 +214,24 @@ struct Ad : Module {
   
   // We want to distribute the partials over the two stereo channels,
   // we need these vectors for that
-  vector<int> leftPartials {4, 8, 12, 16, 20, 24, 28, 32, 36, 40, 44, 48, 52, 56, 60, 64, 68, 72, 76, 80, 84, 88, 92, 96, 100, 104, 108, 112, 116, 120, 124, 128, 15, 27, 39, 51, 63, 75, 87, 99, 111, 123, 35, 65, 95, 125, 77, 119, 2, 5, 11, 17, 23, 31, 41, 47, 59, 67, 73, 83, 97, 103, 109, 127};
-  vector<int> rightPartials {6, 10, 14, 18, 22, 26, 30, 34, 38, 42, 46, 50, 54, 58, 62, 66, 70, 74, 78, 82, 86, 90, 94, 98, 102, 106, 110, 114, 118, 122, 126, 9, 21, 33, 45, 57, 69, 81, 93, 105, 117, 25, 55, 85, 115, 49, 91, 121, 3, 7, 13, 19, 29, 37, 43, 53, 61, 71, 79, 89, 101, 107, 113};
-  
-  // array of phase parameters for each partial + the auxiliary sine ([0]),
-  // for each of the 16 polyphony channels. Initialize on all 0s
-  double phase [16] = {};
-  double phase2 [16] = {};
-  double stretchPhase [16] = {};
-  double auxPhase [16] = {};
-  
-  float buffer [NOSCS][16] = {};
-  float bufferCont [NOSCS][16] = {};
-  int bufferPosition [16] = {};
-  int bufferWait [16] = {};
+  vector<int> leftPartials {
+    2, 4, 5, 8, 11, 12, 15, 16, 17, 20,
+    23, 24, 27, 28, 31, 32, 35, 36, 39, 40,
+    41, 44, 47, 48, 51, 52, 56, 59, 60, 63,
+    64, 65, 67, 68, 72, 73, 75, 76, 77, 80,
+    83, 84, 87, 88, 92, 95, 96, 97, 99, 100,
+    103, 104, 108, 109, 111, 112, 116, 119, 120, 123,
+    124, 125, 127, 128
+};
+  vector<int> rightPartials {
+    3, 6, 7, 9, 10, 13, 14, 18, 19, 21,
+    22, 25, 26, 29, 30, 33, 34, 37, 38, 42,
+    43, 45, 46, 49, 50, 53, 54, 55, 57, 58,
+    61, 62, 66, 69, 70, 71, 74, 78, 79, 81,
+    82, 85, 86, 89, 90, 91, 93, 94, 98, 101,
+    102, 105, 106, 107, 110, 113, 114, 115, 117, 118,
+    121, 122, 126
+};
   
   enum ParamId {
     OCTAVE_PARAM,
@@ -76,8 +242,8 @@ struct Ad : Module {
     LOWESTPARTIAL_PARAM,
     POWER_PARAM,
     SIEVE_PARAM,
-    SAMPLE_AMOUNT_PARAM,
-    SAMPLE_SPEED_PARAM,
+    DRAWER_BALANCE_PARAM,
+    DRAWER_RATE_PARAM,
     WIDTH_PARAM,
     AMP_PARAM,
     STRETCH_ATT_PARAM,
@@ -86,9 +252,6 @@ struct Ad : Module {
     POWER_ATT_PARAM,
     SIEVE_ATT_PARAM,
     SAMPLE_ATT_PARAM,
-    SAMPLE_AMOUNT_ATT_PARAM,
-    SAMPLE_SPEED_ATT_PARAM,
-    WIDTH_ATT_PARAM,
     AMP_ATT_PARAM,
     AUX_PARTIAL_PARAM,
     AUX_AMP_PARAM,
@@ -104,8 +267,8 @@ struct Ad : Module {
     POWER_INPUT,
     SIEVE_INPUT,
     SAMPLE_INPUT,
-    SAMPLE_AMOUNT_INPUT,
-    SAMPLE_SPEED_INPUT,
+    DRAWER_BALANCE_INPUT,
+    DRAWER_RATE_INPUT,
     WIDTH_INPUT,
     AMP_INPUT,
     AUX_PARTIAL_INPUT,
@@ -136,10 +299,10 @@ struct Ad : Module {
     configParam(
       LOWESTPARTIAL_PARAM, 0.f, 6.f, 0.f, "Lowest partial"
     );
-    configParam(POWER_PARAM, -3.f, 1.f, -1.f, "Power");
+    configParam(POWER_PARAM, -3.f, 1.f, -1.f, "Tilt");
     configParam(SIEVE_PARAM, -5.f, 5.f, 0.f, "Sieve");
-    configParam(SAMPLE_AMOUNT_PARAM, 0.f, 1.f, 0.f, "CV sampling amount");
-    configParam(SAMPLE_SPEED_PARAM, -10.f, 10.f, 0.f, "CV sampling rate");
+    configParam(DRAWER_BALANCE_PARAM, 0.f, 1.f, 0.f, "CV sampling amount");
+    configParam(DRAWER_RATE_PARAM, -2.f, 5.f, 0.f, "CV sampling rate");
     configParam(WIDTH_PARAM, -1.f, 1.f, 0.f, "Stereo width");
     configParam(AMP_PARAM, 0.f, 1.f, 1.f, "Amp");
     configParam(
@@ -149,14 +312,9 @@ struct Ad : Module {
       LOWESTPARTIAL_ATT_PARAM, -1.f, 1.f, 0.f, "Lowest partial modulation"
     );
     configParam(STRETCH_ATT_PARAM, -1.f, 1.f, 0.f, "Stretch modulation");
-    configParam(POWER_ATT_PARAM, -1.f, 1.f, 0.f, "Power modulation");
+    configParam(POWER_ATT_PARAM, -1.f, 1.f, 0.f, "Tilt modulation");
     configParam(SIEVE_ATT_PARAM, -1.f, 1.f, 0.f, "Sieve modulation");
     configParam(SAMPLE_ATT_PARAM, 0.f, 2.f, 1.f, "Sample amp");
-    configParam(SAMPLE_AMOUNT_ATT_PARAM, -1.f, 1.f, 0.f,
-      "CV sampling amount modulation");
-    configParam(SAMPLE_SPEED_ATT_PARAM, -1.f, 1.f, 0.f,
-      "CV sampling rate modulation");
-    configParam(WIDTH_ATT_PARAM, 0.f, 1.f, 0.f, "Stereo width modulation");
     configParam(AMP_ATT_PARAM, -1.f, 1.f, 0.f, "Amp modulation");
     configParam(AUX_PARTIAL_PARAM, -2.f, 4.f, 1.f,
       "Auxiliary sine partial");
@@ -164,12 +322,14 @@ struct Ad : Module {
     
     paramQuantities[OCTAVE_PARAM]->snapEnabled = true;
     paramQuantities[AUX_PARTIAL_PARAM]->snapEnabled = true;
+
     getParamQuantity(OCTAVE_PARAM)->randomizeEnabled = false;
+    getParamQuantity(PITCH_PARAM)->randomizeEnabled = false;
     getParamQuantity(AMP_PARAM)->randomizeEnabled = false;
-    getParamQuantity(AUX_AMP_PARAM)->randomizeEnabled = false;
+    getParamQuantity(SAMPLE_ATT_PARAM)->randomizeEnabled = false;
     
     configSwitch(
-      STRETCH_QUANTIZE_PARAM, 0.f, 1.f, 0.f,
+      STRETCH_QUANTIZE_PARAM, 0.f, 1.f, 1.f,
       "Stretch quantize", {"continuous", "quantized"}
     );
     
@@ -181,8 +341,8 @@ struct Ad : Module {
     configInput(POWER_INPUT, "Power modulation");
     configInput(SIEVE_INPUT, "Sieve modulation");
     configInput(SAMPLE_INPUT, "CV sampling");
-    configInput(SAMPLE_AMOUNT_INPUT, "CV sampling amount");
-    configInput(SAMPLE_SPEED_INPUT, "CV sampling rate");
+    configInput(DRAWER_BALANCE_INPUT, "CV sampling amount");
+    configInput(DRAWER_RATE_INPUT, "CV sampling rate");
     configInput(WIDTH_INPUT, "Width modulation");
     configInput(AMP_INPUT, "Amp modulation");
     configInput(AUX_PARTIAL_INPUT, "Auxiliary sine partial modulation");
@@ -204,173 +364,189 @@ struct Ad : Module {
     
     bool stretchQuantize
       = (params[STRETCH_QUANTIZE_PARAM].getValue() > 0.f);
-
+    
     for (int c=0; c<nChannels; c++) {
-      float stretch = params[STRETCH_PARAM].getValue() ;
-      float octave = params[OCTAVE_PARAM].getValue();
-      float pitch = params[PITCH_PARAM].getValue();
-      float nPartials = params[NPARTIALS_PARAM].getValue();
-      float lowestPartial = params[LOWESTPARTIAL_PARAM].getValue();
-      float sampleSpeed = params[SAMPLE_SPEED_PARAM].getValue();
+      osc[c].setSampleTime(args.sampleTime);
+      auxOsc[c].setSampleTime(args.sampleTime);
+
       float amp = params[AMP_PARAM].getValue();
       float auxAmp = params[AUX_AMP_PARAM].getValue();
-      float auxPartial = params[AUX_PARTIAL_PARAM].getValue();
-       
-      float fm = inputs[FM_INPUT].getPolyVoltage(c);
-      fm *= params[FMAMT_PARAM].getValue();
-      
-      stretch += inputs[STRETCH_INPUT].getPolyVoltage(c)
-        *params[STRETCH_ATT_PARAM].getValue()*.2f;
-      octave += inputs[VPOCT_INPUT].getPolyVoltage(c);
-      nPartials += inputs[NPARTIALS_INPUT].getPolyVoltage(c)
-        *params[NPARTIALS_ATT_PARAM].getValue()*.7f;
-      lowestPartial += inputs[LOWESTPARTIAL_INPUT].getPolyVoltage(c)
-        *params[LOWESTPARTIAL_ATT_PARAM].getValue()*.6f;
-      sampleSpeed += inputs[SAMPLE_SPEED_INPUT].getPolyVoltage(c)
-        *params[SAMPLE_SPEED_ATT_PARAM].getValue()*2.f;
       amp += inputs[AMP_INPUT].getPolyVoltage(c)
         *params[AMP_ATT_PARAM].getValue()*.1f;
       auxAmp += inputs[AUX_AMP_INPUT].getPolyVoltage(c)*.1f;
-      auxPartial += inputs[AUX_PARTIAL_INPUT].getPolyVoltage(c)*.8f;
       
-      // quantize the stretch parameter to to the consonant intervals
-      // in just intonation:
-      if (stretchQuantize) {
-        stretch += 1.f;
-        bool stretchNegative = false;
-        if (stretch<0.f) {
-          stretch = -stretch;
-          stretchNegative = true;
-        }
-        float stretchOctave = exp2(floor(log2(abs(stretch))));
-        stretch /= stretchOctave;
-        if (stretch < 1.095445115f) { // sqrt(6/5)
-          stretch = 1.f; // prime
-        }
-        else if (stretch < 1.224744871f ) { // sqrt(6/4)
-          stretch = 1.2f; // 6/5, minor third
-        }
-        else if (stretch < 1.290994449f ) { // sqrt(5/3)
-          stretch = 1.25f; // 5/4, major third
-        }
-        else if (stretch < 1.414213562f ) { // sqrt(2)
-          stretch = 1.333333333f; // 4/3 perfect fourth
-        }
-        else if (stretch < 1.549193338f ) { // sqrt(12/5)
-          stretch = 1.5f; // 3/2 perfect fifth
-        }
-        else if (stretch < 1.632993162f ) { // sqrt(8/3)
-          stretch = 1.6f; // 8/5 minor sixth
-        }
-        else if (stretch < 1.825741858f ) { // sqrt(10/3)
-          stretch = 1.67f; // 5/3 major sixth
-        }
-        else { stretch = 2.f; } // octave
-        stretch *= stretchOctave;
-        if (stretchNegative) { stretch = -stretch; }
-        stretch -= 1.f;
-      }
-      
-      // Compute the pitch an the fundamental frequency
-      // (Ignore FM for a moment)
-      pitch -= 9.f;
-      pitch *= .083333333f; // /12
-      octave -= 4.f;
-      pitch += octave;
-      float freq = 440.f * exp2(pitch);
-      
-      // an array of freqencies for every partial
-      // and the auxiliary sine ([0])
-      float partialFreq [NOSCS+1];
-      // Compute the frequency for the auxiliary sine
-      auxPartial = round(auxPartial);
-      if (auxPartial < .5f) { // for sub-partials:
-        auxPartial = 2.f-auxPartial;
-        partialFreq[0] = freq / ( 1.f + (auxPartial-1.f)*stretch );
-      } else { // for ordinary partials
-        partialFreq[0] = freq * ( 1.f + (auxPartial-1.f)*stretch );
-      }
-      // FM
-      freq *= 1.f + fm;
-      for (int i=1; i<NOSCS+1; i++) {
-        partialFreq[i] = ( 1.f + (i-1.f)*stretch ) * freq;
-      }
-      
-      // exponential mapping for nPartials and lowestPartial
-      nPartials = exp2(nPartials);
-      lowestPartial = exp2(lowestPartial);
-      float highestPartial = lowestPartial + nPartials;
-      // exclude partials oscillating faster than the Nyquist frequency
-      if ( 2.f*abs(stretch*freq*highestPartial) > args.sampleRate ) {
-        highestPartial = abs(args.sampleRate/freq/stretch)*.5f;
-      }
-      lowestPartial = clamp(lowestPartial, 1.f, (float)NOSCS);
-      highestPartial = clamp(highestPartial, lowestPartial, (float)NOSCS);
-      
-      // integer parts of lowestPartial and highestPartial
-      int lowestPartialI = (int)lowestPartial;
-      int highestPartialI = (int)highestPartial;
-      
-      // fade factors for the lowest and highest partials
-      float fadeLowest = lowestPartialI - lowestPartial + 1.f;
-      float fadeHighest = highestPartial - highestPartialI;
-      if (lowestPartialI == highestPartialI) {
-        fadeLowest = highestPartial - lowestPartial;
-        fadeHighest = 1.f;
-      }
-      
-      float auxWave = 0.f;
-      // [0] and [1] are for the the left and right outputs
-      float wave [2] = {}; 
-      float sampleTr = 0.f;
-      
-      if ( (outputs[SUM_L_OUTPUT].isConnected()
-        || outputs[SUM_R_OUTPUT].isConnected() ) && amp != 0.f
+      // reset the phases if both amps are 0
+      // or all three audio outputs are disconnected 
+      if ( ( !outputs[SUM_L_OUTPUT].isConnected()
+          && !outputs[SUM_R_OUTPUT].isConnected()
+          && !outputs[AUX_OUTPUT].isConnected()
+        ) || ( amp == 0.f && auxAmp == 0.f )
       ) {
-        float power = params[POWER_PARAM].getValue();
+        osc[c].resetPhases();
+        auxOsc[c].resetPhase();
+      } else {
+        float stretch = params[STRETCH_PARAM].getValue() ;
+        float octave = params[OCTAVE_PARAM].getValue();
+        float pitch = params[PITCH_PARAM].getValue();
+        float fm = inputs[FM_INPUT].getPolyVoltage(c);
+        float nPartials = params[NPARTIALS_PARAM].getValue();
+        float lowestPartial = params[LOWESTPARTIAL_PARAM].getValue();
+        float tilt = params[POWER_PARAM].getValue();
         float sieve = params[SIEVE_PARAM].getValue();
-        float sampleAmount = params[SAMPLE_AMOUNT_PARAM].getValue();
+        float drawerRate = params[DRAWER_RATE_PARAM].getValue();
+        float drawerBalance = params[DRAWER_BALANCE_PARAM].getValue();
         float width = params[WIDTH_PARAM].getValue();
+        float auxPartial = params[AUX_PARTIAL_PARAM].getValue();
         
-        power += params[POWER_ATT_PARAM].getValue()
-          *inputs[POWER_INPUT].getPolyVoltage(c)*.4f;
-        sieve += params[SIEVE_ATT_PARAM].getValue()
-          *inputs[SIEVE_INPUT].getPolyVoltage(c);
-        sampleAmount += inputs[SAMPLE_AMOUNT_INPUT].getPolyVoltage(c)
-          *params[SAMPLE_AMOUNT_ATT_PARAM].getValue()*.1f;
-        width += inputs[WIDTH_INPUT].getPolyVoltage(c)
-          *params[WIDTH_ATT_PARAM].getValue()*.2f;
- 
-        // put the amplitudes of the partials in an array
-        // The nonzero ones are determined by the power law,
-        // set by the power parameter
-        float partialAmpLeft [NOSCS+1] = {};
-        float partialAmpRight [NOSCS+1] = {};
-        for (int i = lowestPartialI; i<highestPartialI+1; i++) {
-          partialAmpLeft[i] = pow(i, power);
+        stretch += inputs[STRETCH_INPUT].getPolyVoltage(c)
+          *params[STRETCH_ATT_PARAM].getValue()*.2f;
+        octave += inputs[VPOCT_INPUT].getPolyVoltage(c);
+        fm *= params[FMAMT_PARAM].getValue();
+        nPartials += inputs[NPARTIALS_INPUT].getPolyVoltage(c)
+          *params[NPARTIALS_ATT_PARAM].getValue()*.7f;
+        lowestPartial += inputs[LOWESTPARTIAL_INPUT].getPolyVoltage(c)
+          *params[LOWESTPARTIAL_ATT_PARAM].getValue()*.6f;
+        tilt += inputs[POWER_INPUT].getPolyVoltage(c)
+          *params[POWER_ATT_PARAM].getValue()*.4f;
+        sieve += inputs[SIEVE_INPUT].getPolyVoltage(c)
+          *params[SIEVE_ATT_PARAM].getValue();
+        float sample = inputs[SAMPLE_INPUT].getPolyVoltage(c)
+          *params[SAMPLE_ATT_PARAM].getValue()*.1f;
+        drawerRate += inputs[DRAWER_RATE_INPUT].getPolyVoltage(c)*2.f;
+        drawerBalance += inputs[DRAWER_BALANCE_INPUT].getPolyVoltage(c)*.1f;
+        width += inputs[WIDTH_INPUT].getPolyVoltage(c)*.2f;
+        auxPartial += inputs[AUX_PARTIAL_INPUT].getPolyVoltage(c)*.8f;
+        
+        // quantize the stretch parameter to to the consonant intervals
+        // in just intonation:
+        if (stretchQuantize) {
+          stretch += 1.f;
+          bool stretchNegative = false;
+          if (stretch<0.f) {
+            stretch = -stretch;
+            stretchNegative = true;
+          }
+          float stretchOctave = exp2(floor(log2(abs(stretch))));
+          stretch /= stretchOctave;
+          if (stretch < 1.095445115f) { // sqrt(6/5)
+            stretch = 1.f; // prime
+          }
+          else if (stretch < 1.224744871f ) { // sqrt(6/4)
+            stretch = 1.2f; // 6/5, minor third
+          }
+          else if (stretch < 1.290994449f ) { // sqrt(5/3)
+            stretch = 1.25f; // 5/4, major third
+          }
+          else if (stretch < 1.414213562f ) { // sqrt(2)
+            stretch = 1.333333333f; // 4/3 perfect fourth
+          }
+          else if (stretch < 1.549193338f ) { // sqrt(12/5)
+            stretch = 1.5f; // 3/2 perfect fifth
+          }
+          else if (stretch < 1.632993162f ) { // sqrt(8/3)
+            stretch = 1.6f; // 8/5 minor sixth
+          }
+          else if (stretch < 1.825741858f ) { // sqrt(10/3)
+            stretch = 1.67f; // 5/3 major sixth
+          }
+          else { stretch = 2.f; } // octave
+          stretch *= stretchOctave;
+          if (stretchNegative) { stretch = -stretch; }
+          stretch -= 1.f;
         }
         
-        partialAmpLeft[lowestPartialI] *= fadeLowest;
-        partialAmpLeft[highestPartialI] *= fadeHighest;
+        // Compute the pitch an the fundamental frequency
+        // (Ignore FM for a moment)
+        pitch -= 9.f;
+        pitch *= .083333333333333333333f; // /12
+        octave -= 4.f;
+        pitch += octave;
+        float freq = 440.f * exp2(pitch);
         
-        // normalize the amplitudes and simultaneously apply the CV buffer
+        // Compute the frequency for the auxiliary sine
+        auxPartial = round(auxPartial);
+        if (auxPartial < .5f) { // for sub-partials:
+          auxPartial = 2.f-auxPartial;
+          auxOsc[c].setFreq( freq / ( 1.f + (auxPartial-1.f)*stretch ) );
+        } else { // for ordinary partials
+          auxOsc[c].setFreq( freq * ( 1.f + (auxPartial-1.f)*stretch ) );
+        }
+        
+        // FM, only for the main additive oscillator,
+        // not for the auxiliary one
+        freq *= 1.f + fm;
+        osc[c].setFreq(freq);
+
+        osc[c].setStretch(stretch);
+        osc[c].setAmp(amp*5.f);
+        auxOsc[c].setAmp(auxAmp*5.f);
+         
+        // map the rate for the CV drawer to 0
+        // when the knob is completely to the left
+        if (drawerRate < -2.f) { drawerRate = 0.f; }
+        // map the rate knob linearly for the slowest bit
+        else if (drawerRate < -1.f) { drawerRate = 1.f + drawerRate*.5f; }
+        // and exponentially for the most of the knob range
+        else { drawerRate = exp2(drawerRate); }
+        
+        // process the CV drawer
+        drawer[c].setSampleRate(args.sampleRate);
+        drawer[c].setRate(drawerRate);
+        drawer[c].setBalance(drawerBalance);
+        drawer[c].process(sample);
+        
+        // exponential mapping for nPartials and lowestPartial
+        nPartials = exp2(nPartials);
+        lowestPartial = exp2(lowestPartial);
+        float highestPartial = lowestPartial + nPartials;
+        // exclude partials oscillating faster than the Nyquist frequency
+        if ( 2.f*abs(stretch*freq*highestPartial) > args.sampleRate ) {
+          highestPartial = abs(args.sampleRate/freq/stretch)*.5f;
+        }
+        lowestPartial = clamp(lowestPartial, 1.f, (float)NOSCS);
+        highestPartial = clamp(highestPartial, lowestPartial, (float)NOSCS);
+        
+        // integer parts of lowestPartial and highestPartial
+        int lowestPartialI = (int)lowestPartial;
+        int highestPartialI = (int)highestPartial;
+        
+        // fade factors for the lowest and highest partials
+        float fadeLowest = lowestPartialI - lowestPartial + 1.f;
+        float fadeHighest = highestPartial - highestPartialI;
+        if (lowestPartialI == highestPartialI) {
+          fadeLowest = highestPartial - lowestPartial;
+          fadeHighest = 1.f;
+        }
+        
+        // Put the amplitudes of the partials in an array
+        // The nonzero ones are determined by the tilt law,
+        // set by the tilt parameter
+        float partialAmpLeft [NOSCS] = {};
+        float partialAmpRight [NOSCS] = {};
+        for (int i = lowestPartialI-1; i<highestPartialI; i++) {
+          partialAmpLeft[i] = pow(i+1, tilt);
+        }
+        
+        partialAmpLeft[lowestPartialI-1] *= fadeLowest;
+        partialAmpLeft[highestPartialI-1] *= fadeHighest;
+        
+        // normalize the amplitudes and simultaneously apply the CV drawer
         float sumAmp = 0.f;
-        sampleAmount = clamp(sampleAmount, 0.f, 1.f);
-        for (int i=lowestPartialI; i<highestPartialI+1; i++) {
+        drawerBalance = clamp(drawerBalance, 0.f, 1.f);
+        for (int i=lowestPartialI-1; i<highestPartialI; i++) {
           sumAmp += partialAmpLeft[i];
-          partialAmpLeft[i] *= 1.f + (bufferCont[i-1][c]-1.f)*sampleAmount;
-        }
+          partialAmpLeft[i] *= drawer[c].getValue(i); }
         if (sumAmp != 0.f) {
-          for (int i=lowestPartialI; i<highestPartialI+1; i++) {
+          for (int i=lowestPartialI-1; i<highestPartialI; i++) {
             partialAmpLeft[i] /= sumAmp;
           }
         }
         
         // for the case nPartials < 1:
         if (highestPartial - lowestPartial < 1.f) {
-          partialAmpLeft[lowestPartialI]
+          partialAmpLeft[lowestPartialI-1]
             *= highestPartial - lowestPartial;
-          partialAmpLeft[lowestPartialI+1]
+          partialAmpLeft[lowestPartialI]
             *= highestPartial - lowestPartial;
         }
         
@@ -396,143 +572,40 @@ struct Ad : Module {
           // loop over all (proper) multiples of that prime
           // and sieve those out
           for (int j=sieveMode; j*prime[i]<highestPartialI+1; j++) {
-            partialAmpLeft[j*prime[i]] = 0.f;
+            partialAmpLeft[j*prime[i]-1] = 0.f;
           }
         }
         for (int j=sieveMode; j*prime[sieveI]<highestPartialI+1; j++) {
-          partialAmpLeft[j*prime[sieveI]] *= sieveFade;
+          partialAmpLeft[j*prime[sieveI]-1] *= sieveFade;
         }
         
         width = clamp(width, -1.f, 1.f);
-        for (int i=lowestPartialI; i<highestPartialI+1; i++) {
+        // Copy the left partials to the right
+        for (int i=lowestPartialI-1; i<highestPartialI; i++) {
           partialAmpRight[i] = partialAmpLeft[i];
         }
+        // Left and right are flipped for odd channels
+        if (c%2 == 1) { width = -width; }
+        // Apply stereo width
         if (width > 0.f) {
-          for (int i : leftPartials) { partialAmpRight[i] *= 1.f-width; }
-          for (int i : rightPartials) { partialAmpLeft[i] *= 1.f-width; }
+          for (int i : leftPartials) { partialAmpRight[i-1] *= 1.f-width; }
+          for (int i : rightPartials) { partialAmpLeft[i-1] *= 1.f-width; }
         }
         else if (width < 0.f) {
-          for (int i : leftPartials) { partialAmpLeft[i] *= 1.f+width; }
-          for (int i : rightPartials) { partialAmpRight[i] *= 1.f+width; }
-        }
-
-        // Compute the wave output by using the identity
-        // sin(a+b) = 2*sin(a)*cos(b) - sin(a-b)
-        // sin((1+(i+1)*stretch)*phase)
-        //   = 2*sin((1+i*s)*phase)*cos(stretch*phase)
-        //     - sin((1+(i-1)*streth)*phase) 
-        // sine[i] := sin2Pi((1+i*stretch)*phase)
-        // sine[i+1] = 2*sine[i]*cos(stretch*phase)-sine[i-1]
-        float sine[highestPartialI] = {};
-        sine[0] = sin2Pi(phase[c]);
-        sine[1] = sin2Pi(phase2[c]);
-        float cosine = cos2Pi(stretchPhase[c]);
-        for (int i=2; i<highestPartialI; i++) {
-          sine[i] = 2.f*sine[i-1]*cosine - sine[i-2];
-        }
-        for (int i=1; i<highestPartialI+1; i++) {
-          // Left and right are flipped for odd channels
-          wave[c%2] += partialAmpLeft[i] * sine[i-1];
-          wave[(c+1)%2] += partialAmpRight[i] * sine[i-1];
+          for (int i : leftPartials) { partialAmpLeft[i-1] *= 1.f+width; }
+          for (int i : rightPartials) { partialAmpRight[i-1] *= 1.f+width; }
         }
         
-        // a factor 5, because we want 10V pp
-        amp *= 5.f;
-        wave[0] *= amp;
-        wave[1] *= amp;
+        // Process the oscillators
+        osc[c].setHighestPartial(highestPartialI);
+        osc[c].process(partialAmpLeft, partialAmpRight);
+        auxOsc[c].process();
+        
+        outputs[SUM_L_OUTPUT].setVoltage(osc[c].getWaveLeft(), c);
+        outputs[SUM_R_OUTPUT].setVoltage(osc[c].getWaveRight(), c);
+        outputs[AUX_OUTPUT].setVoltage(auxOsc[c].getWave(), c);
+        outputs[SAMPLE_TR_OUTPUT].setVoltage(drawer[c].getTrigger(), c);
       }
-      
-      // compute the auxiliary sine wave
-      if (outputs[AUX_OUTPUT].isConnected() && auxAmp != 0.f) {
-        auxWave = sin2Pi(auxPhase[c]);
-        auxWave *= 5.f*auxAmp;
-        auxWave = clamp(auxWave, -10.f, 10.f);
-      }
-      
-      if (
-        ( amp == 0.f && auxAmp == 0.f )
-        || (
-          !outputs[SUM_L_OUTPUT].isConnected()
-          && !outputs[SUM_R_OUTPUT].isConnected()
-          && !outputs[AUX_OUTPUT].isConnected()
-        )
-      ) {
-        // reset the phases if both amps are 0
-        // or all three audio outputs are disconnected
-        phase[c] = 0.f;
-        phase2[c] = 0.f;
-        stretchPhase[c] = 0.f;
-        auxPhase[c] = 0.f;
-      } else {
-        // accumulate the phases
-        phase[c] += partialFreq[1] * args.sampleTime;
-        phase2[c] += partialFreq[2] * args.sampleTime;
-        stretchPhase[c] += stretch * partialFreq[1] * args.sampleTime;
-        auxPhase[c] += partialFreq[0] * args.sampleTime;
-        // make sure that 0 <= phase < 1
-        phase[c] -= floor(phase[c]);
-        phase2[c] -= floor(phase2[c]);
-        stretchPhase[c] -= floor(stretchPhase[c]);
-        auxPhase[c] -= floor(auxPhase[c]);
-      }
-      
-      // exponential mapping for sampleSpeed,
-      // except for a linear mapping around 0
-      if (sampleSpeed < -1.f) { sampleSpeed = -exp2(-sampleSpeed-2.f); }
-      else if (sampleSpeed < 1.f) { sampleSpeed *= .5f; }
-      else { sampleSpeed = exp2(sampleSpeed-2.f); }
-      float bufferMaxWait = 1.f;
-      if (sampleSpeed != 0.f) {
-        bufferMaxWait = abs(args.sampleRate/sampleSpeed);
-      }
-      
-      // send a trigger out trigger if a sampling occurs
-      if (2*bufferWait[c] < bufferMaxWait) { sampleTr = 5.f; }
-      if (sampleSpeed > 0.f) {
-        // accumulate bufferWait
-        bufferWait[c]++;
-        // every bufferMaxWait steps: move the pointer, reset bufferWait
-        // and put the sample in the buffer
-        if (bufferWait[c] > bufferMaxWait) {
-          bufferPosition[c] += NOSCS;
-          bufferPosition[c]--;
-          bufferPosition[c] %= NOSCS;
-          float sample = inputs[SAMPLE_INPUT].getPolyVoltage(c);
-          sample *= params[SAMPLE_ATT_PARAM].getValue()*.1f;
-          buffer[
-            (bufferPosition[c]+lowestPartialI) % NOSCS
-          ][c] = sample;
-         bufferWait[c] = 0;
-        }
-      } else if (sampleSpeed < 0.f) {
-        bufferWait[c]++;
-        if (bufferWait[c] > bufferMaxWait) {
-          bufferPosition[c]++;
-          bufferPosition[c] %= NOSCS;
-          float sample = inputs[SAMPLE_INPUT].getPolyVoltage(c);
-          sample *= params[SAMPLE_ATT_PARAM].getValue()*.1f;
-           buffer[
-            (bufferPosition[c]+highestPartialI) % NOSCS
-          ][c] = sample;
-         bufferWait[c] = 0;
-        }
-      }
-      // Make a continuous version of the sample
-      // (The factor 0.5 is determined experimentally)
-      if (sampleSpeed != 0.f) {
-        float bufferMaxWaitInv = 1.f/bufferMaxWait;
-        for (int i=0; i < NOSCS; i++) {
-          bufferCont[i][c]
-            += (buffer[(bufferPosition[c]+i+1)%NOSCS][c]-bufferCont[i][c])
-              *bufferMaxWaitInv*.5f;
-        }
-      }
-      
-      // send the signals to the outputs
-      outputs[SUM_L_OUTPUT].setVoltage(wave[0], c);
-      outputs[SUM_R_OUTPUT].setVoltage(wave[1], c);
-      outputs[SAMPLE_TR_OUTPUT].setVoltage(sampleTr, c);
-      outputs[AUX_OUTPUT].setVoltage(auxWave, c);
     }
   }
 };
@@ -578,13 +651,13 @@ struct AdWidget : ModuleWidget {
       mm2px(Vec(23.f*HP, Y3)), module, Ad::SIEVE_PARAM
     ));
     addParam(createParamCentered<RoundBlackKnob>(
-      mm2px(Vec(26.f*HP, Y3)), module, Ad::SAMPLE_AMOUNT_PARAM
+      mm2px(Vec(26.f*HP, Y4)), module, Ad::DRAWER_BALANCE_PARAM
     ));
     addParam(createParamCentered<RoundBlackKnob>(
-      mm2px(Vec(29.f*HP, Y3)), module, Ad::SAMPLE_SPEED_PARAM
+      mm2px(Vec(29.f*HP, Y4)), module, Ad::DRAWER_RATE_PARAM
     ));
     addParam(createParamCentered<RoundBlackKnob>(
-      mm2px(Vec(32.f*HP, Y3)), module, Ad::WIDTH_PARAM
+      mm2px(Vec(32.f*HP, Y4)), module, Ad::WIDTH_PARAM
     ));
     addParam(createParamCentered<RoundBlackKnob>(
       mm2px(Vec(35.f*HP, Y3)), module, Ad::AMP_PARAM
@@ -609,15 +682,6 @@ struct AdWidget : ModuleWidget {
     ));
     addParam(createParamCentered<Trimpot>(
       mm2px(Vec(23.f*HP, Y6)), module, Ad::SAMPLE_ATT_PARAM
-    ));
-    addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(26.f*HP, Y4)), module, Ad::SAMPLE_AMOUNT_ATT_PARAM
-    ));
-    addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(29.f*HP, Y4)), module, Ad::SAMPLE_SPEED_ATT_PARAM
-    ));
-    addParam(createParamCentered<Trimpot>(
-      mm2px(Vec(32.f*HP, Y4)), module, Ad::WIDTH_ATT_PARAM
     ));
     addParam(createParamCentered<Trimpot>(
       mm2px(Vec(35.f*HP, Y4)), module, Ad::AMP_ATT_PARAM
@@ -658,10 +722,10 @@ struct AdWidget : ModuleWidget {
       mm2px(Vec(26.f*HP, Y6)), module, Ad::SAMPLE_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(26.f*HP, Y5)), module, Ad::SAMPLE_AMOUNT_INPUT
+      mm2px(Vec(26.f*HP, Y5)), module, Ad::DRAWER_BALANCE_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
-      mm2px(Vec(29.f*HP, Y5)), module, Ad::SAMPLE_SPEED_INPUT
+      mm2px(Vec(29.f*HP, Y5)), module, Ad::DRAWER_RATE_INPUT
     ));
     addInput(createInputCentered<PJ301MPort>(
       mm2px(Vec(32.f*HP, Y5)), module, Ad::WIDTH_INPUT
