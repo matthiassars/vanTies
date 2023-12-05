@@ -70,29 +70,34 @@ class additiveOscillator {
     void process (float *partialAmpLeft, float *partialAmpRight) {
       // We compute the waves in a smarter way than computing a bunch of
       // sines bute force.
-      // We use the identity sin(a+b) = 2*sin(a)*cos(b) - sin(a-b):
-      // sin((1+(i+1)*stretch)*phase)
-      //   = 2*sin((1+i*s)*phase)*cos(stretch*phase)
-      //     - sin((1+(i-1)*stretch)*phase)
-      // So we can compute the sine iteratively.
-      // We define an array wich contains all the sines:
-      // sine[i] := sin2Pi((1+i*stretch)*phase) ,
-      // so using our identity, we can compute:
-      // sine[i+1] = 2*sine[i]*cos(stretch*phase)-sine[i-1]
-      // We have 3 independent phase paramaters: phase,
-      // phase2 := (1+stretch)*phase and stretchPase := stretch*phase
-      float sine[highestPartial_] = {};
-      sine[0] = sinf(TWOPI*phase_);
-      sine[1] = sinf(TWOPI*phase2_);
+      // We use the identity sin(a+b) = 2*sin(a)*cos(b) - sin(a-b) :
+      // sin((1+i*stretch)*phase)
+      //   = 2*sin((1+(i-1)*s)*phase)*cos(stretch*phase)
+      //     - sin((1+(i-2)*stretch)*phase) .
+      // So we can compute the sines iteratively.
+      // We define: sine_i := sin((1+i*stretch)*phase) ,
+      //   sine_iMin1 := sin((1+(i-1)*stretch)*phase) ,
+      //   sine_iMin2 := sin((1+(i-2)*stretch)*phase) ,
+      //   cosine := cos(stretch*phase) ,
+      // so using our identity, we can covmpute:
+      // sine_i := 2*sine_iMin1*cosine - sine_iMin2 .
+      // We have 3 independent trigonometric functions, so we have 3
+      // intependant phasors paramaters: phase,
+      // phase2 := (1+stretch)*phase and stretchPase := stretch*phase . 
       float cosine = cosf(TWOPI*stretchPhase_);
-      waveLeft_ = partialAmpLeft[0] * sine[0]
-        + partialAmpLeft[1] * sine[1];
-      waveRight_ = partialAmpRight[0] * sine[0]
-        + partialAmpRight[1] * sine[1];
+      float sine_iMin2 = sinf(TWOPI*phase_);
+      float sine_iMin1 = sinf(TWOPI*phase2_);
+      waveLeft_ = partialAmpLeft[0] * sine_iMin2
+        + partialAmpLeft[1] * sine_iMin1;
+      waveRight_ = partialAmpRight[0] * sine_iMin2
+        + partialAmpRight[1] * sine_iMin1;
+      float sine_i;
       for (int i=2; i<highestPartial_; i++) {
-        sine[i] = 2.f*sine[i-1]*cosine - sine[i-2];
-        waveLeft_ += partialAmpLeft[i] * sine[i];
-        waveRight_ += partialAmpRight[i] * sine[i];
+        sine_i = 2.f*sine_iMin1*cosine - sine_iMin2;
+        waveLeft_ += partialAmpLeft[i] * sine_i;
+        waveRight_ += partialAmpRight[i] * sine_i;
+        sine_iMin2 = sine_iMin1;
+        sine_iMin1 = sine_i;
       }
       waveLeft_ *= amp_;
       waveRight_ *= amp_;
