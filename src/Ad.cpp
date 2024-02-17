@@ -31,6 +31,8 @@ class additiveOscillator {
   private:
     float sampleTime_ = 1.f/48000.f;
     float stretch_ = 1.f;
+    bool stretchRational_ = false;
+    int stretchNumerator_ = 1;
     // We need 3 phasors. In the "process" method we'll see why.
     double phase_ = 0.f;
     double stretchPhase_ = 0.f;
@@ -51,11 +53,21 @@ class additiveOscillator {
     
     void setFreq (float freq) {
       dPhase_ = freq*sampleTime_;
-      dStretchPhase_ = stretch_*dPhase_;
-      dPhase2_ = dPhase_ + dStretchPhase_;
+      if (!stretchRational_) {
+        dStretchPhase_ = stretch_*dPhase_;
+        dPhase2_ = dPhase_ + dStretchPhase_;
+      }
     }
     
     void setStretch (float stretch) { stretch_ = stretch; }
+
+    void setPhasesFreeRunning () { stretchRational_ = false; }
+    
+    void setStretchNumerator (int stretchNumerator) {
+      if (stretchNumerator == 0) { stretchNumerator_ = 1; }
+      else { stretchNumerator_ = stretchNumerator; }
+      stretchRational_ = true; 
+    }
     
     void setAmp (float amp) { amp_ = amp; }
     
@@ -103,12 +115,27 @@ class additiveOscillator {
       waveRight_ *= amp_;
       
       // increment the phases
-      phase_ += dPhase_;
-      phase2_ += dPhase2_;
-      stretchPhase_ += dStretchPhase_;
-      phase_ -= floor(phase_);
-      phase2_ -= floor(phase2_);
-      stretchPhase_ -= floor(stretchPhase_);
+      // If we the stretch parameter to be rational, we compute
+      // stretchPhase_ and phase2_ from phase_. We make sure that phase is
+      // between 0 and stretchNumerator (since we have a virtual fundamental
+      // of stretchNumerator*freq).
+      if (stretchRational_) {
+        phase_ += dPhase_;
+//        phase_ -= stretchNumerator_*floor(phase_/(float)stretchNumerator_);
+        while (phase_ < 0.f) { phase_ += stretchNumerator_; }
+        while (phase_ > stretchNumerator_) { phase_ -= stretchNumerator_; }
+        stretchPhase_ = stretch_*phase_;
+        phase2_ = phase_ + stretchPhase_;
+      } else {
+      // If we the stretch parameter to be irrational, the three phases run
+      // independantly.
+        phase_ += dPhase_;
+        phase2_ += dPhase2_;
+        stretchPhase_ += dStretchPhase_;
+        phase_ -= floor(phase_);
+        phase2_ -= floor(phase2_);
+        stretchPhase_ -= floor(stretchPhase_);
+      }
     }
     
     float getWaveLeft () { return waveLeft_; }
@@ -295,7 +322,7 @@ struct Ad : Module {
     config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
     
     configParam(OCTAVE_PARAM, -1.f, 6.f, 4.f, "Octave");
-    configParam(PITCH_PARAM, 0.f, 12.f, 9.f, "Pitch");
+    configParam(PITCH_PARAM, 0.f, 12.f, 0.f, "Pitch");
     configParam(STRETCH_PARAM, 0.f, 2.f, 1.f, "Stretch");
     configParam(FMAMT_PARAM, 0.f, 1.f, 0.f, "FM amount");
     configParam(
@@ -422,6 +449,7 @@ struct Ad : Module {
         width += inputs[WIDTH_INPUT].getPolyVoltage(c)*.2f;
         auxPartial += inputs[AUX_PARTIAL_INPUT].getPolyVoltage(c)*.8f;
         
+        int stretchNumerator = 1;
         // quantize the stretch parameter to to the consonant intervals
         // in just intonation:
         if (stretchQuantize) {
@@ -431,35 +459,41 @@ struct Ad : Module {
             stretch = -stretch;
             stretchNegative = true;
           }
-          float stretchOctave = exp2(floor(log2(abs(stretch))));
+          float stretchOctave = exp2(floor(log2(stretch)));
           stretch /= stretchOctave;
           if (stretch < 1.095445115f) { // sqrt(6/5)
             stretch = 1.f; // prime
           }
           else if (stretch < 1.224744871f ) { // sqrt(6/4)
             stretch = 1.2f; // 6/5, minor third
+            stretchNumerator = 5;
           }
           else if (stretch < 1.290994449f ) { // sqrt(5/3)
             stretch = 1.25f; // 5/4, major third
+            stretchNumerator = 4;
           }
           else if (stretch < 1.414213562f ) { // sqrt(2)
-            stretch = 1.333333333f; // 4/3 perfect fourth
+            stretch = 1.33333333333333333333f; // 4/3 perfect fourth
+            stretchNumerator = 3;
           }
           else if (stretch < 1.549193338f ) { // sqrt(12/5)
             stretch = 1.5f; // 3/2 perfect fifth
+            stretchNumerator = 2;
           }
           else if (stretch < 1.632993162f ) { // sqrt(8/3)
             stretch = 1.6f; // 8/5 minor sixth
+            stretchNumerator = 5;
           }
           else if (stretch < 1.825741858f ) { // sqrt(10/3)
-            stretch = 1.67f; // 5/3 major sixth
+            stretch = 1.666666666666666666667f; // 5/3 major sixth
+            stretchNumerator = 3;
           }
           else { stretch = 2.f; } // octave
           stretch *= stretchOctave;
           if (stretchNegative) { stretch = -stretch; }
           stretch -= 1.f;
         }
-        
+
         // Compute the pitch an the fundamental frequency
         // (Ignore FM for a moment)
         pitch -= 9.f;
@@ -483,6 +517,11 @@ struct Ad : Module {
         osc[c].setFreq(freq);
 
         osc[c].setStretch(stretch);
+        if (!stretchQuantize || stretch<0.f) {
+          osc[c].setPhasesFreeRunning();
+        } else {
+          osc[c].setStretchNumerator(stretchNumerator);
+        }
         osc[c].setAmp(amp*5.f);
         auxOsc[c].setAmp(auxAmp*5.f);
          
