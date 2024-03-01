@@ -1,7 +1,7 @@
 // Ad
 // eratosthenean additive oscillator module
 // for VCV Rack
-// development version
+// v2.3.0
 // Author: Matthias Sars
 // http://www.matthiassars.eu
 // https://github.com/matthiassars/vanTies
