@@ -1,7 +1,7 @@
 {
-  "slug": "vanTies-dev",
+  "slug": "vanTies",
   "name": "van Ties - dev",
-  "version": "2.2.1",
+  "version": "2.3.0",
   "license": "GPL-3.0-or-later",
   "brand": "",
   "author": "Matthias Sars",
@@ -19,27 +19,6 @@
       "description": "additive oscillator",
       "tags": ["Oscillator", "Polyphonic"],
       "keywords": "additive"
-    } ,
-    {
-      "slug": "vaaje",
-      "name": "vaaje",
-      "description": "wave folder",
-      "tags": ["Waveshaper"],
-      "keywords": "folder"
-    } ,
-    {
-      "slug": "zjwengele",
-      "name": "zjwengele",
-      "description": "",
-      "tags": [],
-      "keywords": ""
-    } ,
-    {
-      "slug": "sjtapele",
-      "name": "sjtapele",
-      "description": "",
-      "tags": [],
-      "keywords": ""
     }
   ]
 }
