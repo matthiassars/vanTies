@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ad van Ties – manual</title>
+  <link type="text/css" href="style.css" rel="stylesheet" />
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="header"> Manual<br>van Ties </div>
+
+    <div class="navigation">
+      <a href="index.html">⌂</a>
+      <a href="ad.html">Ad</a>
+      <a href="adje.html">Adje</a>
+      <a href="bufke.html">Bufke</a>
+      <a href="funs.html">Funs</a>
+      <a href="ad-whatsnew.html" class="active">What’s new?</a>
+    </div>
+
+    <div class="content">
+      <h3>What’s new?</h3>
+
+      <h4>… in v2.5.0</h4>
+      <ul>
+        <li> Added modules Adje, Bufke and Funs.</li>
+        <li> Changed Ad’s front panel slightly: moved some thingMaybe find a purpose for Ad and Adje’s delay knob in case the buffer input is not connected.s around to make it similar to Adje, and changed the numbers for the tilt knob to icons.</li>
+        <li>Converted this manual from PDF to HTML.</li>
+      </ul>
+
+      <h4>… in v2.4.1?</h4>
+      <ul>
+        <li>The Σ outputs are in general a bit hotter (but still within ±5 V), due to a change in the normalization procedure.</li>
+        <li>Optimization, by reducing the computation rate for the amplitudes of the partials.</li>
+        <li>Extended the range of the tilt parameter: from minimum –2 to –∞.</li>
+        <li>Added the quantize stretch to harmonics mode.</li>
+      </ul>
+
+      <h4>… in v2.4.0?</h4>
+      <ul>
+        <li>Added a spectrogram display.</li>
+        <li>Still, it was possible to make the front panel got more compact (12HP) by</li>
+        <ul>
+          <li>combining the lowest partial and tilt parameters into one parameter,</li>
+          <li>moving settings to the context menu,</li>
+          <li>getting rid of the buffer CV attenuator/amplifier,</li>
+          <li>getting rid of the balance knob (this is replaced by detecting the connection at the buffer CV input),</li>
+          <li>getting rid of the octave knob (this is replaced by the pitch quantization settings),</li>
+          <li>rearranging.</li>
+        </ul>
+        <li>Changes in the CV buffer section:</li>
+        <ul>
+          <li>Added random mode.</li>
+          <li>Added the clock input.</li>
+          <li>Reworked the delay knob. The left-hand side is replaced by the ‘high → low’ mode.</li>
+        </ul>
+        <li>Reworked the left-hand side of the sieve knob. Basically changed the order.</li>
+        <li>Added reset trigger input.</li>
+        <li>Reworked the normalization of the amplitudes, such that the output audio is in some cases a bit louder.</li>
+        <li>Reworked the stereo section: the lower partials are panned less than the higher ones now. And the continuous width parameter is reduced to three options.</li>
+        <li>Added pitch quantization and reset modes.</li>
+        <li>Added left/right channel flipping.</li>
+      </ul>
+
+      <h4>… in v2.3.0?</h4>
+
+      <ul>
+        <li>The CV buffer section is reworked. The most significant bit is that there is now a large buffer which runs at audio rate. Now one can send snappy envelopes into it, which are replayed without any smoothening.</li>
+        <li>More compact front panel,</li>
+        <ul>
+          <li>by replacing the auxiliary oscillator section with only the fundamental output,</li>
+          <li>getting rid of the stereo width and balance CV inputs, because I consider those `set and forget' parameters,</li>
+          <li>getting rid of the amp parameter, since the new CV buffer section can take this role when the delay time is set to 0.</li>
+        </ul>
+        <li>Got rid of the change of v2.2.1. I didn't like the clicky sound when turning the stretch knob.</li>
+        <li>Added the reset button.</li>
+        <li>Changed some knob ranges.</li>
+      </ul>
+
+      <h4>… in v2.2.1?</h4>
+
+      <ul>
+        <li>The phasors can’t drift any more in quantized stretch mode.</li>
+      </ul>
+      <h4>… in v2.2.0?</h4>
+      <ul>
+        <li>a different, generally more efficient algorithm computing the sines. This algorithm can cause some phase shifting after running a while, though.</li>
+        <li>The CV drawer works differently.</li>
+        <li>Some parameters are renamed.</li>
+        <li>Some of the knob mappings have changed.</li>
+        <li>Got rid of a few attenuverters.</li>
+      </ul>
+
+      <h4>… in v2.1.0?</h4>
+      <ul>
+        <li>the CV drawer</li>
+        <li>the ‘sieve primes’ mode</li>
+        <li>bug fix</li>
+        <li>some knob mappings</li>
+      </ul>
+
+      <h3>To do:</h3>
+      <ul>
+        <li>More optimization.</li>
+        <li>Maybe find a purpose for Ad and Adje’s delay knob in case the buffer input is not connected.</li>
+        <li>Maybe add a tilt parameter to Bufke.</li>
+      </ul>
+
+
+    </div>
+
+    <div class="navigation">
+      <p>by Matthias Sars</p>
+      <p><a href="http://www.matthiassars.eu" target="_blank">http://www.matthiassars.eu</a></p>
+      <p>
+        <a href="https://www.instagram.com/matthiassars/" target="_blank"><img src="instagram.png" style="width:18px; vertical-align:middle"></a>
+        <a href="https://www.youtube.com/@matthias_sars" target="_blank"><img src="youtube.png" style="width:18px; vertical-align:middle"></a>
+        <a href="https://www.linkedin.com/in/matthiassars/" target="_blank"><img src="linkedin.png" style="width:18px; vertical-align:middle"></a>
+        <a href="https://github.com/matthiassars?tab=repositories" target="_blank"><img src="github.png" style="width:18px; vertical-align:middle"></a>
+      </p>
+    </div>
+  </div>
+</body>
+
+</html>
