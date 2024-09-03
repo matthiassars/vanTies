@@ -87,13 +87,21 @@
 
       <p> Let’s have look at the front panel, and first at the knobs and jacks with yellow labels. There are five of these parameter knobs: <b>pitch</b>, <b>number of partials</b>, <b>tilt</b>, <b>stretch</b> and <b>sieve</b>, with corresponding CV inputs (for the pitch both a <b>V/octave</b> as well as an <b>FM input</b>), and bipolar attenuverters / a unipolar attenuator for FM.</p>
 
-      On the bottom right there’s a corner where the background yellow and the labels are dark blue: here are the three output jacks: one for the <b>fundamental</b> wave (the first partial) and two for the <b>summed</b> (‘<b>Σ</b>’), labelled <b>Left</b> and <b>Right</b>. On the bottom left there’s a <b>reset</b> button with a corresponding input jack. On the top, the <b>spectrogram</b> is shown. The knob and jacks with red labels belong to the ‘<b>partial amplitudes / CV buffer</b>’ section: there’s a <b>delay time</b> knob with corresponding CV input (without attenuator), a <b>clock</b> and a <b>CV to buffer</b> input. <h3>Parameters</h3> Before we continue: all of Ad’s parameters act continuously on its output signals, including those parameters that actually only make sense as integers (e.g. the number of partials). In that case there is some fading going on. Exceptions are the <b>quantization</b> modes. These can be set in the context menu (right click on the panel to get there).
+      On the bottom right there’s a corner where the background yellow and the labels are dark blue: here are the three output jacks: one for the <b>fundamental</b> wave (the first partial) and two for the <b>summed</b> (‘<b>Σ</b>’), labelled <b>Left</b> and <b>Right</b>. On the bottom left there’s a <b>reset</b> button with a corresponding input jack. On the top, the <b>spectrogram</b> is shown. The knob and jacks with red labels belong to the ‘<b>partial amplitudes / CV buffer</b>’ section: there’s a <b>delay time</b> knob with corresponding CV input (without attenuator), a <b>clock</b> and a <b>CV to buffer</b> input.
+      
+      <h3>Parameters</h3>
+      
+      Before we continue: all of Ad’s parameters act continuously on its output signals, including those parameters that actually only make sense as integers (e.g. the number of partials). In that case there is some fading going on. Exceptions are the <b>quantization</b> modes. These can be set in the context menu (right click on the panel to get there).
 
       <h4>Pitch</h4>
 
-      The pitch knob can be quantized in <b>octaves</b> or <b>semitones</b>. This only affects the knob, not the <b>V/octave</b> input. The <b>FM</b> jack provides linear through-0 FM. It only affects the main Σ outputs, not the fundamental output, so you can use the fundamental output for self-patching, for example into the FM input. <h4>Partials</h4>
+      The pitch knob can be quantized in <b>octaves</b> or <b>semitones</b>. This only affects the knob, not the <b>V/octave</b> input. The <b>FM</b> jack provides linear through-0 FM. It only affects the main Σ outputs, not the fundamental output, so you can use the fundamental output for self-patching, for example into the FM input.
+      
+      <h4>Partials</h4>
 
-      The ‘number of partials’ parameter has more or less the effect of a low-pass filter. <h4>Tilt</h4>
+      The ‘number of partials’ parameter has more or less the effect of a low-pass filter.
+      
+      <h4>Tilt</h4>
 
       <p>The tilt knob controls both the lowest partial as well as the exponent <i>α</i> in above expression. It has two zones:
       <ul>
@@ -131,13 +139,17 @@
 
       <h4>Polyphony</h4>
 
-      Ad works with polyphony. (It can get CPU-heavy, though.) <h4>Stereo</h4>
+      Ad works with polyphony. (It can get CPU-heavy, though.)
+      
+      <h4>Stereo</h4>
 
       If the stereo mode in the menu set to <b>mono</b>, or if the right Σ output is connected, both the <b>left</b> and the <b>right</b> Σ outputs are the same. If it is set to <b>hard-panned</b>, the partials are distributed over the two channels, except for the fundamental, which goes to both channels. This is done in such a way that for any value of the sieve parameter, those two channels are pretty much in balance. See <a href="ad-app.html">the appendix</a> for details. On a <b>reset</b> trigger or when all amplitude are 0, the channels are <b>flipped</b>. Initially, the channels are also flipped for the odd-numbered polyphony channels. The <b>soft-panned</b> mode is similar, except that the left partials also appear more quietly in the right channel and vice versa, in such a way that the lower partials are more panned less than the higher ones.
 
       <h4>Spectrogram</h4>
 
-      The x-axis of the spectrogram on the panel represents the frequencies on a linear scale, ranging from 0 on the very left to the Nyquist frequency (half the sample rate) on the very right. The y-axis represents the amplitudes on a logarithmic scale. The left channel is represented with yellow lines and the right channel with red ones. <h4>Reset</h4>
+      The x-axis of the spectrogram on the panel represents the frequencies on a linear scale, ranging from 0 on the very left to the Nyquist frequency (half the sample rate) on the very right. The y-axis represents the amplitudes on a logarithmic scale. The left channel is represented with yellow lines and the right channel with red ones.
+      
+      <h4>Reset</h4>
 
       The phasors inside Ad can drift apart, especially when one plays with the stretch parameter. Usually this doesn’t cause any audible difference. The effect of wave shapers like wave folding can be audibly different, though. Audible drifting can also occur, when the module runs for a while. The reason for that is, in order to save CPU, the 128 sines are not all computed brute force, but recursively from each other. Some artefacts can occur then. The phasors are reset either of these cases: on a reset trigger, if the amplitudes of all the partials are 0 or if the three outputs are disconnected. This means that the reset input can also be used for oscillator sync.
 
