@@ -26,11 +26,13 @@
       <h1>Funs</h1>
       <h3>a rational function oscillator</h3>
 
-      <center><img src="funs-panel.png"></center>
+      <p>
+        <center><img src="funs-panel.png"></center>
+      </p>
 
       <h2>The short story</h2>
 
-      <p>Funs’ outputs two related waves. The wave shapes is determined by 3 parameters: <i>a</i>, <i>b</i> and <i>c</i>.</p>
+      <p>Funs’ outputs two related waves. The wave shapes is determined by three parameters: <i>a</i>, <i>b</i> and <i>c</i>.</p>
 
       <p>On the display on the panel the wave shapes are shown (wave 1 in yellow, wave 2 in red). On each wave 7 points are marked. The left- and rightmost points are fixed: these are a zero-point of the wave.</p>
 
@@ -38,15 +40,168 @@
 
       <p>Parameter <i>a</i> takes values between 0 and <i>c</i> and determines the position of the maximum of the wave.</p>
 
-      <p>Parameter <i>b</i> takes values between <i>a</i> and <i>c</i> determines the position where the wave equals <sup>1</sup>/<sub>2</sub>√2 (in proportion to the maximum).</p>
+      <p>Parameter <i>b</i> takes values between <i>a</i> and <i>c</i> determines the position where the wave equals ½√2 (in proportion to the maximum).</p>
+
+      <p>If the knobs for these three parameters are all at noon, the resulting waves are a good approximation of a sine.</p>
 
       <h2>Other features</h2>
 
       <p>The <b>FM</b> jack provides linear through-0 FM.</p>
 
-      <p>The pitch knob can be quantized in <b>octaves</b> or <b>semitones</b>. This only affects the knob, not the <b>V/octave</b> input.</p>
+      <p>The pitch knob can be quantized in <b>octaves</b> or <b>semitones</b> via the context menu. This only affects the knob, not the <b>V/octave</b> input.</p>
+
+      <p>Funs can work with polyphonically. The number of channels is determined be the number of channels coming in at the V/oct jack. (The two waves are flipped for even numbered channels.)</p>
 
       <h2>The long story</h2>
+
+      <p>We start with a function <i>g</i> : [0, ½] → [0, 1]. This is going to be half a wave. We impose the following five conditions on it:</p>
+
+      <p>
+        <center>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <i>g</i>(0) = 0
+          </div>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <i>g</i>(½) = 0
+          </div>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <i>g</i>(<i>a</i>) = 1
+          </div>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <i>g</i>’(<i>a</i>) = 0
+          </div>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <i>g</i>(<i>b</i>) = ½√2
+          </div>
+        </center>
+      </p>
+
+      <p>where <i>a</i> and <i>b</i> are parameters which are going to determine the shape of out wave. In particular, <i>a</i> determines the maximum of the wave. Note that <i>g</i>(<i>x</i>) = sin(2<i>πx</i>) is a solution for the case <i>a</i> = ¼ and <i>b</i> = ⅜.</p>
+
+      <p>We take <i>g</i> to be a rational function though, namely one of numerator and denominator degree 2, i.e. it’s of the form</p>
+
+      <p>
+        <center>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <i>g</i>(<i>x</i>) = &nbsp;
+            <div>
+              <div style="border-bottom: 1px solid #ffffbf;"><i>p</i><sub>0</sub> + <i>p</i><sub>1</sub><i>x</i> + <i>p</i><sub>2</sub><i>x</i><sup>2</sup></div>
+              <div><i>q</i><sub>0</sub> + <i>q</i><sub>1</sub><i>x</i> + <i>q</i><sub>2</sub><i>x</i><sup>2</sup></div>
+            </div>
+        </center>
+      </p>
+
+      <p>The solution is the function</p>
+
+      <p>
+      <p>
+        <center>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div><i>g</i>(<i>x</i>) = &nbsp;</div>
+            <div>
+              <div style="border-bottom: 1px solid #ffffbf;"><i>x</i>(2<i>x</i> – 1)(<i>a</i> – <i>b</i>)<sup>2</sup></div>
+              <div><i>a</i><sup>2</sup>[2(√2 – 1)<i>b</i><sup>2</sup> – (√2 – 1)<i>b</i> + <i>x</i>(2<i>x</i> – 1)]
+                + <i>b</i><i>x</i>[–2<i>a</i>(2(√2 – 1)<i>b</i> + 2<i>x</i> – √2)
+                + <i>b</i>(2√2<i>x</i> – 1)
+                – (√2 – 1)<i>x</i>]</div>
+            </div>
+          </div>
+        </center>
+      </p>
+      </p>
+
+      <p>
+        <center><img src="g.svg" width="50%"></center>
+      </p>
+
+      <p>To make this into a full wave function <i>g̅</i>, we combine two half waves:</p>
+
+      <p>
+        <center>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <i>g̅</i>(<i>x</i>) = &nbsp;
+            <div>
+              <table>
+                <tr>
+                  <td><i>g</i>(<i>x</i>)</td>
+                  <td>for 0 ≤ <i>x</i> &lt; ½</td>
+                </tr>
+                <tr>
+                  <td>– <i>g</i>(1 – <i>x</i>)</td>
+                  <td>for ½ ≤ <i>x</i> &lt; 1</td>
+                </tr>
+              </table>
+            </div>
+        </center>
+      </p>
+
+      <p>
+        <center><img src="gbar.svg" width="50%"></center>
+      </p>
+
+      <p>Then we introduce a second function, <i>h</i> : [0, 1] → [0, 1]. This one is going to be our phase distortion, i.e.: the final wave is going to be something like <i>f</i>(<i>x</i>) = <i>g̅</i>(<i>h</i>(<i>x</i>)). We impose the following four conditions on this one:</p>
+
+      <p>
+        <center>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <i>h</i>(0) = 0
+          </div>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <i>h</i>(1) = 1
+          </div>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <i>h’</i>(0) =&nbsp;<i>g’</i>(1)
+          </div>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <i>h</i>(<i>c</i>) = ½
+          </div>
+        </center>
+      </p>
+
+      <p>The third condition makes sure there are no cusps in <i>h</i>. The parameter <i>c</i> determines the shape the distortion. Since <i>g̅</i> crosses 0 at <i>x</i> = ½, <i>c</i> determines the zero-crossing of our final wave <i>f</i>. For <i>c</i> = ½ we are going to have no distortion, i.e. <i>h</i>(<i>x</i>) = <i>x</i>.</p>
+
+      <p>We take <i>h</i> to be a rational function as well, namely of the form</p>
+
+      <p>
+        <center>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <i>h</i>(<i>x</i>) = &nbsp;
+            <div>
+              <div style="border-bottom: 1px solid #ffffbf;"><i>p</i><sub>0</sub> + <i>p</i><sub>1</sub><i>x</i></div>
+              <div><i>q</i><sub>0</sub> + <i>q</i><sub>1</sub><i>x</i> + <i>q</i><sub>2</sub><i>x</i><sup>2</sup></div>
+            </div>
+        </center>
+      </p>
+
+      <p>Then we get two solutions:</p>
+
+      <p>
+        <center>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div><i>h</i><sub>±</sub>(<i>x</i>) =&nbsp;</div>
+            <div>
+              <div style="border-bottom: 1px solid #ffffbf;">2(<i>c</i><sup>3</sup> – 2<i>c</i><sup>2</sup> + <i>c</i>)<i>x</i></div>
+              <div><i>x</i>(2<i>c</i><sup>3</sup> – <i>c</i>(<i>x</i> – 3)) + <i>c</i><sup>2</sup>(2<i>x</i><sup>2</sup> – 7<i>x</i> + 1)
+                ± √[<i>c</i>(4<i>c</i><sup>3</sup> – 12<i>c</i><sup>2</sup> + 13<i>c</i> – 4)]
+                (<i>x</i> – 1)(<i>c</i> – <i>x</i>)</div>
+            </div>
+          </div>
+        </center>
+      </p>
+
+      <p>
+        <center><img src="h.svg" width="50%"></center>
+      </p>
+
+      <p>This is why we end up with two wave outputs on our module. The final wave forms are then</p>
+
+      <p>
+        <center>
+          <div>
+            <i>f</i><sub>±</sub>(<i>x</i>) =&nbsp;<i>g̅</i>(<i>h</i><sub>±</sub>(<i>x</i>))
+            <div>
+        </center>
+      </p>
 
     </div>
 

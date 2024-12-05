@@ -30,20 +30,20 @@
       <h1>Ad</h1>
       <h3>an eratosthenean additive oscillator</h3>
 
-      <center><img src="ad-panel.png"></center>
+      <p><center><img src="ad-panel.png"></center></p>
 
       <p>Ad a sound source based on the concept of additive synthesis, so I figured Ad is a good name.</p>
 
       <p>Fourier analysis is the study of wave signals, by decomposing (‘ανάλυσις’ in the true sense of the word) them into sine waves (partials). <a href="https://en.wikipedia.org/wiki/Fourier_series">[Wikipedia article]</a></p>
 
-      <center>
+      <p><center>
         <iframe style="width: 49%; aspect-ratio: 16 / 9" src="https://www.youtube.com/embed/spUNpyF58BY" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
         <iframe style="width: 49%; aspect-ratio: 16 / 9" src="https://www.youtube.com/embed/nmgFG7PUHfo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-      </center>
+      </center></p>
 
       <p>For example, it turns out that a saw wave (with frequency <i>f</i>) can be written as</p>
 
-      <center>
+      <p><center>
         <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
           <div>
             <div>
@@ -54,17 +54,17 @@
           </div>
           <div><i>i</i><sup>-1</sup> sin (2<i>πift</i>) .</div>
         </div>
-      </center>
+      </center></p>
 
       <p>Additive synthesis turns this idea around: one creates a sound by adding many sine waves (partials) together. (‘σύνθεσις’ in the true sense of the word.)</p>
 
-      <center>
+      <p><center>
         <iframe style="width: 49%; aspect-ratio: 16 / 9" src="https://www.youtube.com/embed/SCujIf5eJ2w" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-      </center>
+      </center></p>
 
       <p>In the case of Ad: it works by generalizing the above expression for the saw wave as follows:</p>
 
-      <center>
+      <p><center>
         <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
           <div>
             <div style="border-bottom: 1px solid #ffffbf;"><small>1</small></div>
@@ -77,7 +77,7 @@
           </div>
           <div><i>σ<sub>i</sub>a<sub>i</sub>i<sup>α</sup></i> sin (2<i>π</i> (1 + ((<i>i</i> - 1) <i>s</i>)) <i>ft</i>) .</div>
         </div>
-      </center>
+      </center></p>
 
       <p> Instead of taking an infinite amount of partials (which is impossible to begin with), we select a certain set of partials, by choosing a lowest partial <i>n</i>, a number of partials <i>N</i>, and <i>σ<sub>i</sub></i> ∈ {0, 1} which ‘sieve’ certain partials. Furthermore, there is an exponent <i>α</i>, a ‘stretch’ parameter <i>s</i>, and for each partial there is a factor <i>a<sub>i</sub></i> ∈ [-1, 1] that scales that partial’s amplitude. <i>C</i> is just a normalization constant.</p>
 
@@ -87,20 +87,20 @@
 
       <p> Let’s have look at the front panel, and first at the knobs and jacks with yellow labels. There are five of these parameter knobs: <b>pitch</b>, <b>number of partials</b>, <b>tilt</b>, <b>stretch</b> and <b>sieve</b>, with corresponding CV inputs (for the pitch both a <b>V/octave</b> as well as an <b>FM input</b>), and bipolar attenuverters / a unipolar attenuator for FM.</p>
 
-      On the bottom right there’s a corner where the background yellow and the labels are dark blue: here are the three output jacks: one for the <b>fundamental</b> wave (the first partial) and two for the <b>summed</b> (‘<b>Σ</b>’), labelled <b>Left</b> and <b>Right</b>. On the bottom left there’s a <b>reset</b> button with a corresponding input jack. On the top, the <b>spectrogram</b> is shown. The knob and jacks with red labels belong to the ‘<b>partial amplitudes / CV buffer</b>’ section: there’s a <b>delay time</b> knob with corresponding CV input (without attenuator), a <b>clock</b> and a <b>CV to buffer</b> input.
-      
+      <p>On the bottom right there’s a corner where the background yellow and the labels are dark blue: here are the three output jacks: one for the <b>fundamental</b> wave (the first partial) and two for the <b>summed</b> (‘<b>Σ</b>’), labelled <b>Left</b> and <b>Right</b>. On the bottom left there’s a <b>reset</b> button with a corresponding input jack. On the top, the <b>spectrogram</b> is shown. The knob and jacks with red labels belong to the ‘<b>partial amplitudes / CV buffer</b>’ section: there’s a <b>delay time</b> knob with corresponding CV input (without attenuator), a <b>clock</b> and a <b>CV to buffer</b> input.</p>
+
       <h3>Parameters</h3>
-      
-      Before we continue: all of Ad’s parameters act continuously on its output signals, including those parameters that actually only make sense as integers (e.g. the number of partials). In that case there is some fading going on. Exceptions are the <b>quantization</b> modes. These can be set in the context menu (right click on the panel to get there).
+
+      <p>Before we continue: all of Ad’s parameters act continuously on its output signals, including those parameters that actually only make sense as integers (e.g. the number of partials). In that case there is some fading going on. Exceptions are the <b>quantization</b> modes. These can be set in the context menu (right click on the panel to get there).</p>
 
       <h4>Pitch</h4>
 
-      The pitch knob can be quantized in <b>octaves</b> or <b>semitones</b>. This only affects the knob, not the <b>V/octave</b> input. The <b>FM</b> jack provides linear through-0 FM. It only affects the main Σ outputs, not the fundamental output, so you can use the fundamental output for self-patching, for example into the FM input.
-      
+      <p>The pitch knob can be quantized in <b>octaves</b> or <b>semitones</b>. This only affects the knob, not the <b>V/octave</b> input. The <b>FM</b> jack provides linear through-0 FM. It only affects the main Σ outputs, not the fundamental output, so you can use the fundamental output for self-patching, for example into the FM input.</p>
+
       <h4>Partials</h4>
 
       The ‘number of partials’ parameter has more or less the effect of a low-pass filter.
-      
+
       <h4>Tilt</h4>
 
       <p>The tilt knob controls both the lowest partial as well as the exponent <i>α</i> in above expression. It has two zones:
@@ -131,39 +131,41 @@
 
       <p>Maybe it’s easier to understand it by trying it yourself: send an LFO into the buffer input and set the number of partials to maximum. Experiment then with the rate of your LFO and the delay time and look what happens on the spectrogram. If the LFO is a sine, you can get comb filter-like effects. Or when you send in an envelope, the individual partials each get a delayed envelope.
 
-      <p> can send in an external <b>clock</b>. The delay knob then becomes a clock divider. (The knob ranges from a division by 8 next to 0 to a division by 1 next to ❄. Unless it would exceed the buffer length, then the clock gets divided by a power of 2.)</p>
+      <p>One can send in an external <b>clock</b>. The delay knob then becomes a clock divider. (The knob ranges from a division by 8 next to 0 to a division by 1 next to ❄. Unless it would exceed the buffer length, then the clock gets divided by a power of 2.)</p>
 
-      The ‘<b>high → low</b>’ mode works analogously. In unclocked <b>random</b> mode, the delay for each partial is determined by a uniform random distribution. In clocked random mode, the delay times lay on a grid in time, given by the incoming clock and the division set by the delay knob. The random values are generated again on a <b>reset</b> (via the button or input) or if all amplitudes are 0. If the ‘empty buffer on reset’ option is selected in the menu, a reset trigger, indeed, empties the buffer.
+      <p>The ‘<b>high → low</b>’ mode works analogously. In unclocked <b>random</b> mode, the delay for each partial is determined by a uniform random distribution. In clocked random mode, the delay times lay on a grid in time, given by the incoming clock and the division set by the delay knob. The random values are generated again on a <b>reset</b> (via the button or input) or if all amplitudes are 0. If the ‘empty buffer on reset’ option is selected in the menu, a reset trigger, indeed, empties the buffer.</p>
+
+      <p>To summarize: roughly speaking, the pitch and stretch control the the frequencies of the partials. The other four parameters control the amplitudes of the partials. They can set certain amplitudes to zero, which has the effect of removing frequencies / pitches from the spectrum.</p>
 
       <h2>Other Features</h2>
 
       <h4>Polyphony</h4>
 
-      Ad works with polyphony. (It can get CPU-heavy, though.)
-      
+      <p>Ad can work with polyphonically. The number of channels is determined be the number of channels coming in at the V/oct jack. (It can get CPU-heavy, though.)</p>
+
       <h4>Stereo</h4>
 
-      If the stereo mode in the menu set to <b>mono</b>, or if the right Σ output is connected, both the <b>left</b> and the <b>right</b> Σ outputs are the same. If it is set to <b>hard-panned</b>, the partials are distributed over the two channels, except for the fundamental, which goes to both channels. This is done in such a way that for any value of the sieve parameter, those two channels are pretty much in balance. See <a href="ad-app.html">the appendix</a> for details. On a <b>reset</b> trigger or when all amplitude are 0, the channels are <b>flipped</b>. Initially, the channels are also flipped for the odd-numbered polyphony channels. The <b>soft-panned</b> mode is similar, except that the left partials also appear more quietly in the right channel and vice versa, in such a way that the lower partials are more panned less than the higher ones.
+      <p>If the stereo mode in the menu set to <b>mono</b>, or if the right Σ output is connected, both the <b>left</b> and the <b>right</b> Σ outputs are the same. If it is set to <b>hard-panned</b>, the partials are distributed over the two channels, except for the fundamental, which goes to both channels. This is done in such a way that for any value of the sieve parameter, those two channels are pretty much in balance. See <a href="ad-app.html">the appendix</a> for details. On a <b>reset</b> trigger or when all amplitude are 0, the channels are <b>flipped</b>. Initially, the channels are also flipped for the odd-numbered polyphony channels. The <b>soft-panned</b> mode is similar, except that the left partials also appear more quietly in the right channel and vice versa, in such a way that the lower partials are more panned less than the higher ones.</p>
 
       <h4>Spectrogram</h4>
 
-      The x-axis of the spectrogram on the panel represents the frequencies on a linear scale, ranging from 0 on the very left to the Nyquist frequency (half the sample rate) on the very right. The y-axis represents the amplitudes on a logarithmic scale. The left channel is represented with yellow lines and the right channel with red ones.
-      
+      <p>The x-axis of the spectrogram on the panel represents the frequencies on a linear scale, ranging from 0 on the very left to the Nyquist frequency (half the sample rate) on the very right. The y-axis represents the amplitudes on a logarithmic scale. The left channel is represented with yellow lines and the right channel with red ones.</p>
+
       <h4>Reset</h4>
 
-      The phasors inside Ad can drift apart, especially when one plays with the stretch parameter. Usually this doesn’t cause any audible difference. The effect of wave shapers like wave folding can be audibly different, though. Audible drifting can also occur, when the module runs for a while. The reason for that is, in order to save CPU, the 128 sines are not all computed brute force, but recursively from each other. Some artefacts can occur then. The phasors are reset either of these cases: on a reset trigger, if the amplitudes of all the partials are 0 or if the three outputs are disconnected. This means that the reset input can also be used for oscillator sync.
+      <p>The phasors inside Ad can drift apart, especially when one plays with the stretch parameter. Usually this doesn’t cause any audible difference. The effect of wave shapers like wave folding can be audibly different, though. Audible drifting can also occur, when the module runs for a while. The reason for that is, in order to save CPU, the 128 sines are not all computed brute force, but recursively from each other. Some artefacts can occur then. The phasors are reset either of these cases: on a reset trigger, if the amplitudes of all the partials are 0 or if the three outputs are disconnected. This means that the reset input can also be used for oscillator sync.</p>
 
       <h4>Sample rate / control rate</h4>
 
-      I might be good to know that (in order to save CPU) not all computations are done at sample rate. The amplitudes of the partials are computed at ¹⁄₆₄th of the sample rate, with a minimum rate of 750 Hz. This implies that the parameters partials, tilt and sieve, as well as the CV buffer section can’t really be modulated at audio rate. The parameters concerning the frequencies of the partials (V/oct, FM and stretch) can be modulated at audio rate. Also the reset input takes audio rate, in order to facilitate oscillator sync.
+      <p>I might be good to know that (in order to save CPU) not all computations are done at sample rate. The amplitudes of the partials are computed at ¹⁄₆₄th of the sample rate, with a minimum rate of 750 Hz. This implies that the parameters partials, tilt and sieve, as well as the CV buffer section can’t really be modulated at audio rate. The parameters concerning the frequencies of the partials (V/oct, FM and stretch) can be modulated at audio rate. Also the reset input takes audio rate, in order to facilitate oscillator sync.</p>
 
       <h4>Parameter ranges</h4>
 
-      In many cases, the parameters can be pushed beyond the knob ranges with CV. The player can experiment with it to find out. Ad has a huge pitch compass, 9 octaves with the knob only, especially towards the lower side. The idea behind that is, to make it also possible to generate chords, rather than timbres. You can do this by selecting only a few partials by using the tilt (on the right side), number of partials and sieve parameters. It could also be interesting to play with this transition zone of harmony and timbre.
+      <p>In many cases, the parameters can be pushed beyond the knob ranges with CV. The player can experiment with it to find out. Ad has a huge pitch compass, 9 octaves with the knob only, especially towards the lower side. The idea behind that is, to make it also possible to generate chords, rather than timbres. You can do this by selecting only a few partials by using the tilt (on the right side), number of partials and sieve parameters. It could also be interesting to play with this transition zone of harmony and timbre.</p>
 
       <h4>Fundamental</h4>
 
-      There is an output for the fundamental wave. It is not affected by FM. Besides a sine wave, there is also a square and suboctave sine wave available via the context menu.
+      <p>There is an output for the fundamental wave. It is not affected by FM. Besides a sine wave, there is also a square and suboctave sine wave available via the context menu.</p>
 
     </div>
 
