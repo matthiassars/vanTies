@@ -17,6 +17,7 @@
       <a href="adje.html">Adje</a>
       <a href="bufke.html">Bufke</a>
       <a href="funs.html">Funs</a>
+      <a href="sjoegele.html">sjoegele</a>
       <a href="whatsnew.html">What’s new?</a>
     </div>
 
@@ -30,54 +31,64 @@
       <h1>Ad</h1>
       <h3>an eratosthenean additive oscillator</h3>
 
-      <p><center><img src="ad-panel.png"></center></p>
+      <p>
+        <center><img src="ad-panel.png"></center>
+      </p>
 
       <p>Ad a sound source based on the concept of additive synthesis, so I figured Ad is a good name.</p>
 
       <p>Fourier analysis is the study of wave signals, by decomposing (‘ανάλυσις’ in the true sense of the word) them into sine waves (partials). <a href="https://en.wikipedia.org/wiki/Fourier_series">[Wikipedia article]</a></p>
 
-      <p><center>
-        <iframe style="width: 49%; aspect-ratio: 16 / 9" src="https://www.youtube.com/embed/spUNpyF58BY" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-        <iframe style="width: 49%; aspect-ratio: 16 / 9" src="https://www.youtube.com/embed/nmgFG7PUHfo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-      </center></p>
+      <p>
+        <center>
+          <iframe style="width: 49%; aspect-ratio: 16 / 9" src="https://www.youtube.com/embed/spUNpyF58BY" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+          <iframe style="width: 49%; aspect-ratio: 16 / 9" src="https://www.youtube.com/embed/nmgFG7PUHfo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </center>
+      </p>
 
       <p>For example, it turns out that a saw wave (with frequency <i>f</i>) can be written as</p>
 
-      <p><center>
-        <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
-          <div>
+      <p>
+        <center>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
             <div>
-              <div><small>∞</small></div>
-              <div><big>∑</big></div>
-              <div><small><i>i</i> = 1</small></div>
+              <div>
+                <div><small>∞</small></div>
+                <div><big>∑</big></div>
+                <div><small><i>i</i> = 1</small></div>
+              </div>
             </div>
+            <div><i>i</i><sup>-1</sup> sin (2<i>πift</i>) .</div>
           </div>
-          <div><i>i</i><sup>-1</sup> sin (2<i>πift</i>) .</div>
-        </div>
-      </center></p>
+        </center>
+      </p>
 
       <p>Additive synthesis turns this idea around: one creates a sound by adding many sine waves (partials) together. (‘σύνθεσις’ in the true sense of the word.)</p>
 
-      <p><center>
-        <iframe style="width: 49%; aspect-ratio: 16 / 9" src="https://www.youtube.com/embed/SCujIf5eJ2w" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-      </center></p>
+      <p>
+        <center>
+          <iframe style="width: 49%; aspect-ratio: 16 / 9" src="https://www.youtube.com/embed/SCujIf5eJ2w" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+        </center>
+      </p>
 
       <p>In the case of Ad: it works by generalizing the above expression for the saw wave as follows:</p>
 
-      <p><center>
-        <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
-          <div>
-            <div style="border-bottom: 1px solid #ffffbf;"><small>1</small></div>
-            <div><small><i>C</i></small></div>
+      <p>
+        <center>
+          <div style="display: flex; flex-direction: row; justify-content: center; align-items: center;">
+            <div>
+              <div style="border-bottom: 1px solid #ffffbf;"><small>1</small></div>
+              <div><small><i>C</i></small></div>
+            </div>
+            <div>
+              <div><small><i>n</i>+<i>N</i>-1</small></div>
+              <div><big>∑</big></div>
+              <div><small><i>i</i> = <i>n</i></small></div>
+            </div>
+            <div><i>σ<sub>i</sub>a<sub>i</sub>i<sup>α</sup></i> sin (2<i>π</i> (1 + ((<i>i</i> - 1) <i>s</i>)) <i>ft</i>) .</div>
           </div>
-          <div>
-            <div><small><i>n</i>+<i>N</i>-1</small></div>
-            <div><big>∑</big></div>
-            <div><small><i>i</i> = <i>n</i></small></div>
-          </div>
-          <div><i>σ<sub>i</sub>a<sub>i</sub>i<sup>α</sup></i> sin (2<i>π</i> (1 + ((<i>i</i> - 1) <i>s</i>)) <i>ft</i>) .</div>
-        </div>
-      </center></p>
+        </center>
+      </p>
 
       <p> Instead of taking an infinite amount of partials (which is impossible to begin with), we select a certain set of partials, by choosing a lowest partial <i>n</i>, a number of partials <i>N</i>, and <i>σ<sub>i</sub></i> ∈ {0, 1} which ‘sieve’ certain partials. Furthermore, there is an exponent <i>α</i>, a ‘stretch’ parameter <i>s</i>, and for each partial there is a factor <i>a<sub>i</sub></i> ∈ [-1, 1] that scales that partial’s amplitude. <i>C</i> is just a normalization constant.</p>
 
@@ -95,7 +106,7 @@
 
       <h4>Pitch</h4>
 
-      <p>The pitch knob can be quantized in <b>octaves</b> or <b>semitones</b>. This only affects the knob, not the <b>V/octave</b> input. The <b>FM</b> jack provides linear through-0 FM. It only affects the main Σ outputs, not the fundamental output, so you can use the fundamental output for self-patching, for example into the FM input.</p>
+      <p>The pitch knob can be quantized in <b>octaves</b> or <b>semitones</b>. This only affects the knob, not the <b>V/octave</b> input. The <b>FM</b> jack provides linear through-0 FM. It only affects the main Σ outputs, not the fundamental output.</p>
 
       <h4>Partials</h4>
 
@@ -145,7 +156,7 @@
 
       <h4>Stereo</h4>
 
-      <p>If the stereo mode in the menu set to <b>mono</b>, or if the right Σ output is connected, both the <b>left</b> and the <b>right</b> Σ outputs are the same. If it is set to <b>hard-panned</b>, the partials are distributed over the two channels, except for the fundamental, which goes to both channels. This is done in such a way that for any value of the sieve parameter, those two channels are pretty much in balance. See <a href="ad-app.html">the appendix</a> for details. On a <b>reset</b> trigger or when all amplitude are 0, the channels are <b>flipped</b>. Initially, the channels are also flipped for the odd-numbered polyphony channels. The <b>soft-panned</b> mode is similar, except that the left partials also appear more quietly in the right channel and vice versa, in such a way that the lower partials are more panned less than the higher ones.</p>
+      <p>If the stereo mode in the menu is set to <b>mono</b>, or if the right Σ output is connected, both the <b>left</b> and the <b>right</b> Σ outputs are the same. If it is set to <b>hard-panned</b>, the partials are distributed over the two channels, except for the fundamental, which goes to both channels. This is done in such a way that for any value of the sieve parameter, those two channels are pretty much in balance. See <a href="ad-app.html">the appendix</a> for details. On a <b>reset</b> trigger or when all amplitude are 0, the channels are <b>flipped</b>. Initially, the channels are also flipped for the odd-numbered polyphony channels. The <b>soft-panned</b> mode is similar, except that the left partials also appear more quietly in the right channel and vice versa, in such a way that the lower partials are more panned less than the higher ones.</p>
 
       <h4>Spectrogram</h4>
 
@@ -161,19 +172,23 @@
 
       <h4>Parameter ranges</h4>
 
-      <p>In many cases, the parameters can be pushed beyond the knob ranges with CV. The player can experiment with it to find out. Ad has a huge pitch compass, 9 octaves with the knob only, especially towards the lower side. The idea behind that is, to make it also possible to generate chords, rather than timbres. You can do this by selecting only a few partials by using the tilt (on the right side), number of partials and sieve parameters. It could also be interesting to play with this transition zone of harmony and timbre.</p>
+      <p>Some of the parameters can be pushed beyond the knob ranges with CV. The player can experiment with it to find out. Ad has a huge pitch compass, 9 octaves with the knob only, especially towards the lower side. The idea behind that is, to make it also possible to generate chords, rather than timbres. You can do this by selecting only a few partials by using the tilt (on the right side), number of partials and sieve parameters. It could also be interesting to play with this transition zone of harmony and timbre.</p>
 
       <h4>Fundamental</h4>
 
-      <p>There is an output for the fundamental wave. It is not affected by FM. Besides a sine wave, there is also a square and suboctave sine wave available via the context menu.</p>
+      <p>There is an output for the fundamental wave. If the lowest partial ≥ 1 (i.e. the tilt parameter is past noon), the produced wave is shifted up by a corresponding number of octaves.</p>
+      
+      <p>It is not affected by FM, so you can use it for self-patching, for example into before mentioned FM input.</p>
 
+      <h4>Comb</h4>
+
+      <p>If the ‘→ buffer’ input is not connected, the delay knob (and the corresponding CV input) control a comb filter.</p>
     </div>
 
     <div class="navigation">
       <p>by Matthias Sars</p>
       <p><a href="http://www.matthiassars.eu" target="_blank">http://www.matthiassars.eu</a></p>
       <p>
-        <a href="https://www.instagram.com/matthiassars/" target="_blank"><img src="instagram.png" style="width:18px; vertical-align:middle"></a>
         <a href="https://www.youtube.com/@matthias_sars" target="_blank"><img src="youtube.png" style="width:18px; vertical-align:middle"></a>
         <a href="https://www.linkedin.com/in/matthiassars/" target="_blank"><img src="linkedin.png" style="width:18px; vertical-align:middle"></a>
         <a href="https://github.com/matthiassars?tab=repositories" target="_blank"><img src="github.png" style="width:18px; vertical-align:middle"></a>

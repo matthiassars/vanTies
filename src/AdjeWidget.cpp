@@ -82,8 +82,8 @@ AdjeWidget::AdjeWidget(Adje* module) {
 		mm2px(Vec(40.64, 103)), module, Adje::CVBUFFER_CLOCK_INPUT));
 	addOutput(createOutputCentered<DarkPJ301MPort>(
 		mm2px(Vec(54.18666666666667, 103)), module, Adje::VPOCT_OUTPUT));
-	addParam(createParamCentered<VCVButton>(
-		mm2px(Vec(6.773333333333333, 114)), module, Adje::RESET_PARAM));
+	addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(
+		mm2px(Vec(6.773333333333333, 114)), module, Adje::RESET_PARAM, Adje::RESET_LIGHT));
 	addInput(createInputCentered<DarkPJ301MPort>(
 		mm2px(Vec(20.32, 114)), module, Adje::RESET_INPUT));
 	addInput(createInputCentered<DarkPJ301MPort>(
@@ -108,7 +108,7 @@ void AdjeWidget::appendContextMenu(Menu* menu) {
 		{ "Continuous",
 		 "Consonants",
 		 "Harmonics" },
-		&module->stretchQuantMode));
+		&module->stretchQuant));
 
 	menu->addChild(createIndexPtrSubmenuItem(
 		"CV buffer order",

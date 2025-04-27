@@ -5,7 +5,7 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
     return;
 
   if (layer == 1) {
-    nvgStrokeWidth(args.vg, 1);
+    nvgStrokeWidth(args.vg, 1.f);
     nvgLineCap(args.vg, NVG_ROUND);
     nvgLineJoin(args.vg, NVG_ROUND);
 
@@ -171,5 +171,5 @@ void FunsWidget::appendContextMenu(Menu* menu) {
     { "Continuous",
      "Semitones",
      "Octaves" },
-    &module->pitchQuantMode));
+    &module->pitchQuant));
 }

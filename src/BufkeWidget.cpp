@@ -8,7 +8,7 @@ void BufkeMeterWidget::drawLayer(const DrawArgs& args, int layer) {
 		return;
 
 	if (layer == 1) {
-		nvgStrokeWidth(args.vg, 1);
+		nvgStrokeWidth(args.vg, 1.f);
 
 		float width = box.size.x;
 		int partials = min(module->highest - module->lowest + 1,
@@ -23,16 +23,19 @@ void BufkeMeterWidget::drawLayer(const DrawArgs& args, int layer) {
 			else
 				nvgStrokeColor(args.vg, nvgRGBf(1.f, 1.f, .75f));
 			nvgBeginPath(args.vg);
-			if (partials == 1) {
-				nvgMoveTo(args.vg, .5f * width, .5f * box.size.y);
-				nvgLineTo(args.vg, .5f * width,
-					(-.05f * module->valuesSmooth[i] + .5f) * box.size.y);
-			} else {
-				nvgMoveTo(args.vg, (i - module->lowest + 1.5f) * width, .5f * box.size.y);
-				nvgLineTo(args.vg, (i - module->lowest + 1.5f) * width,
-					(-.05f * module->valuesSmooth[i % module->channels] + .5f) * box.size.y);
-			}
+			nvgMoveTo(args.vg, (i - module->lowest + 1.5f) * width, .5f * box.size.y);
+			nvgLineTo(args.vg, (i - module->lowest + 1.5f) * width,
+				(-.05f * module->valuesSmooth[i % module->channels] + .5f) * box.size.y);
 			nvgStroke(args.vg);
+		}
+
+		if (module->masterBuf) {
+			nvgBeginPath(args.vg);
+			nvgFillColor(args.vg, nvgRGBf(1.f, .5f, .5f));
+			nvgFontSize(args.vg, 9.f);
+			nvgText(args.vg, 1.5f, 9.f, "\u21C4", NULL);
+			nvgFill(args.vg);
+			nvgClosePath(args.vg);
 		}
 	}
 	Widget::drawLayer(args, layer);
@@ -56,8 +59,8 @@ BufkeWidget::BufkeWidget(Bufke* module) {
 		mm2px(Vec(15.24, 81)), module, Bufke::CVBUFFER_CLOCK_INPUT));
 	addInput(createInputCentered<DarkPJ301MPort>(
 		mm2px(Vec(10.16, 92)), module, Bufke::CVBUFFER_INPUT));
-	addParam(createParamCentered<VCVButton>(
-		mm2px(Vec(5.08, 103)), module, Bufke::RESET_PARAM));
+	addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(
+		mm2px(Vec(5.08, 103)), module, Bufke::RESET_PARAM, Bufke::RESET_LIGHT));
 	addInput(createInputCentered<DarkPJ301MPort>(
 		mm2px(Vec(15.24, 103)), module, Bufke::RESET_INPUT));
 	addOutput(createOutputCentered<DarkPJ301MPort>(

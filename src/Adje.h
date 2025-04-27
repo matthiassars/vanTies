@@ -1,8 +1,10 @@
 #pragma once
-#include <cmath>
 #include <iostream>
-#include "plugin.hpp"
-#include "Spectrum.h"
+#include <cmath>
+#include "rack.hpp"
+#include "vanTies.h"
+#include "dsp/Spectrum.h"
+#include "dsp/AdditiveOscillator.h"
 
 struct Adje : Module {
 	enum ParamId {
@@ -37,21 +39,23 @@ struct Adje : Module {
 		OUTPUTS_LEN
 	};
 	enum LightId {
+		RESET_LIGHT,
 		LIGHTS_LEN
 	};
 
-	int stretchQuantMode = 0;
-	int cvBufferMode = 0;
+	AdditiveOscillator::StretchQuant stretchQuant
+		= AdditiveOscillator::StretchQuant::CONTINUOUS;
+	CvBuffer::Mode cvBufferMode = CvBuffer::Mode::LOW_HIGH;
 	bool emptyOnReset = false;
 	int channels = 16;
 
 	// A part of the code will be excecuted at a lower rate than the sample
-	// rate ("cr" stands for "control rate"), in order to save CPU.
-	int maxCrCounter;
-	int crCounter;
+	int blockSize;
+	int blockCounter;
 
 	bool isReset = false;
 	bool isRandomized = false;
+	float resetLight = 0.f;
 	float pitch[16] = {};
 	float amp[16] = {};
 
@@ -67,7 +71,7 @@ struct Adje : Module {
 	void onReset(const ResetEvent& e) override;
 	void onRandomize(const RandomizeEvent& e) override;
 	void onSampleRateChange(const SampleRateChangeEvent& e) override;
-	void reset();
+	void reset(bool set0);
 	void process(const ProcessArgs& args) override;
 };
 

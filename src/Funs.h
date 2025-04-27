@@ -9,10 +9,11 @@
 // *
 
 #pragma once
-#include <cmath>
 #include <iostream>
-#include "plugin.hpp"
-#include "RatFuncOscillator.h"
+#include <cmath>
+#include "rack.hpp"
+#include "vanTies.h"
+#include "dsp/RatFuncOscillator.h"
 
 struct Funs : Module {
   enum ParamId {
@@ -44,13 +45,19 @@ struct Funs : Module {
     LIGHTS_LEN
   };
 
+  enum PitchQuant {
+		CONTINUOUS,
+		SEMITONES,
+		OCTAVES
+	};
+
   Funs();
 
   RatFuncOscillator osc[16];
 
   int channels = 1;
-  int pitchQuantMode = 0;
-
+  PitchQuant pitchQuant = CONTINUOUS;
+  
   json_t* dataToJson() override;
   void dataFromJson(json_t* rootJ) override;
   void process(const ProcessArgs& args) override;

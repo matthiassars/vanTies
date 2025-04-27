@@ -1,6 +1,6 @@
 #pragma once
+#include <iostream>
 #include <rack.hpp>
-
 
 using namespace rack;
 
@@ -12,3 +12,4 @@ extern Model* modelAd;
 extern Model* modelAdje;
 extern Model* modelBufke;
 extern Model* modelFuns;
+extern Model* modelSjoegele;

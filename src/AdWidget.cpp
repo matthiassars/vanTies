@@ -122,8 +122,8 @@ AdWidget::AdWidget(Ad* module) {
 		mm2px(Vec(36.576, 103)), module, Ad::CVBUFFER_CLOCK_INPUT));
 	addOutput(createOutputCentered<DarkPJ301MPort>(
 		mm2px(Vec(48.768, 103)), module, Ad::FUND_OUTPUT));
-	addParam(createParamCentered<VCVButton>(
-		mm2px(Vec(6.096, 114)), module, Ad::RESET_PARAM));
+	addParam(createLightParamCentered<VCVLightBezel<WhiteLight>>(
+		mm2px(Vec(6.096, 114)), module, Ad::RESET_PARAM, Ad::RESET_LIGHT));
 	addInput(createInputCentered<DarkPJ301MPort>(
 		mm2px(Vec(18.288, 114)), module, Ad::RESET_INPUT));
 	addInput(createInputCentered<DarkPJ301MPort>(
@@ -148,39 +148,32 @@ void AdWidget::appendContextMenu(Menu* menu) {
 	menu->addChild(createIndexPtrSubmenuItem(
 		"Quantize pitch knob",
 		{ "Continuous",
-		 "Semitones",
-		 "Octaves" },
-		&module->pitchQuantMode));
+			"Semitones",
+			"Octaves" },
+		&module->pitchQuant));
 
 	menu->addChild(createIndexPtrSubmenuItem(
 		"Quantize stretch",
 		{ "Continuous",
-		 "Consonants",
-		 "Harmonics" },
-		&module->stretchQuantMode));
+			"Consonants",
+			"Harmonics" },
+		&module->stretchQuant));
 
 	menu->addChild(createIndexPtrSubmenuItem(
 		"Stereo mode",
 		{ "Mono",
-		"Soft-panned",
-		"Hard-panned" },
+			"Soft-panned",
+			"Hard-panned" },
 		&module->stereoMode));
 
 	menu->addChild(createIndexPtrSubmenuItem(
 		"CV buffer order",
 		{ "Low\u2192high",
-		 "High\u2192low",
-		 "Random" },
+			"High\u2192low",
+			"Random" },
 		&module->cvBufferMode));
 
 	menu->addChild(createBoolPtrMenuItem(
-		"Empty buffer channels on reset", "",
+		"Empty buffer on reset", "",
 		&module->emptyOnReset));
-
-	menu->addChild(createIndexPtrSubmenuItem(
-		"Fundamental wave shape",
-		{ "Sine",
-		 "Square",
-		 "Sub sine" },
-		&module->fundShape));
 }

@@ -1,9 +1,11 @@
 #pragma once
-#include <cmath>
 #include <iostream>
-#include "plugin.hpp"
-#include "FollowingCvBuffer.h"
+#include <cmath>
+#include "rack.hpp"
+#include "vanTies.h"
+#include "dsp/FollowingCvBuffer.h"
 #include "Adje.h"
+// #include "Huub.h"
 
 struct Bufke : Module {
 	enum ParamId {
@@ -23,10 +25,11 @@ struct Bufke : Module {
 		OUTPUTS_LEN
 	};
 	enum LightId {
+		RESET_LIGHT,
 		LIGHTS_LEN
 	};
 
-	int cvBufferMode = 0;
+	CvBuffer::Mode cvBufferMode = CvBuffer::Mode::LOW_HIGH;
 	bool emptyOnReset = false;
 
 	int lowest = 0;
@@ -36,13 +39,13 @@ struct Bufke : Module {
 	bool resetSignal = false;
 
 	// A part of the code will be excecuted at a lower rate than the sample
-	// rate ("cr" stands for "control rate"), in order to save CPU.
-	int maxCrCounter;
-	float crRatio;
-	int crCounter;
+	int blockSize;
+	float blockRatio;
+	int blockCounter;
 
 	bool isReset = false;
 	bool isRandomized = false;
+	float resetLight = 0.f;
 
 	float valuesSmooth[16] = {};
 

@@ -5,9 +5,6 @@
 // http://www.matthiassars.eu
 // https://github.com/matthiassars/vanTies
 
-// To do:
-// *
-
 #include "Funs.h"
 
 using namespace std;
@@ -40,15 +37,15 @@ Funs::Funs() {
 
 json_t* Funs::dataToJson() {
   json_t* rootJ = json_object();
-  json_object_set_new(rootJ, "pitchQuantMode",
-    json_integer(pitchQuantMode));
+  json_object_set_new(rootJ, "pitchQuant",
+    json_integer(pitchQuant));
   return rootJ;
 }
 
 void Funs::dataFromJson(json_t* rootJ) {
-  json_t* pitchQuantModeJ = json_object_get(rootJ, "pitchQuantMode");
-  if (pitchQuantModeJ)
-    pitchQuantMode = json_integer_value(pitchQuantModeJ);
+  json_t* pitchQuantJ = json_object_get(rootJ, "pitchQuant");
+  if (pitchQuantJ)
+    pitchQuant = (PitchQuant)json_integer_value(pitchQuantJ);
 }
 
 void Funs::process(const ProcessArgs& args) {
@@ -60,16 +57,16 @@ void Funs::process(const ProcessArgs& args) {
   for (int ch = 0; ch < channels; ch++) {
     float pitch = params[VPOCT_PARAM].getValue();
 
-    if (pitchQuantMode == 2)
+    if (pitchQuant == OCTAVES)
       pitch = round(pitch);
-    else if (pitchQuantMode == 1)
+    else if (pitchQuant == SEMITONES)
       pitch = round(12.f * pitch) / 12.f;
 
     pitch += inputs[VPOCT_INPUT].getPolyVoltage(ch);
-    float fm = inputs[FM_INPUT].getPolyVoltage(ch) * .2f;
     pitch = 16.35159783128741466737f * exp2f(pitch);
-    pitch *= 1.f + fm * params[FMAMT_PARAM].getValue() * 16.f;
-    osc[ch].setFreq(pitch);
+    float fm = inputs[FM_INPUT].getPolyVoltage(ch) * .2f;
+    float fmAmt = exp2f(5.f * params[FMAMT_PARAM].getValue()) - 1.f;
+    osc[ch].setFreq((1.f + fm * fmAmt) * pitch);
 
     float a = params[A_PARAM].getValue();
     float b = params[B_PARAM].getValue();
@@ -80,24 +77,18 @@ void Funs::process(const ProcessArgs& args) {
       * inputs[B_INPUT].getPolyVoltage(ch);
     c += .1f * params[C_ATT_PARAM].getValue()
       * inputs[C_INPUT].getPolyVoltage(ch);
-    a = 1.f / (1.f + exp2_taylor5(-8.f * (a - .5f)));
-    b = 1.f / (1.f + exp2_taylor5(-8.f * (b - .5f)));
-    c = 1.f / (1.f + exp2_taylor5(-8.f * (c - .5f)));
-    a *= .5f;
-    b = (.5f - a) * b + a;
 
     osc[ch].setFreq(pitch);
-    osc[ch].setA(a);
-    osc[ch].setB(b);
-    osc[ch].setC(c);
+    osc[ch].setParams(a, b, c);
 
     osc[ch].process();
+
     if (ch % 2) {
-      outputs[WAVE1_OUTPUT].setVoltage(5.f * osc[ch].getWave(), ch);
-      outputs[WAVE2_OUTPUT].setVoltage(5.f * osc[ch].getWave2(), ch);
+      outputs[WAVE1_OUTPUT].setVoltage(5.f * osc[ch].getWave(0), ch);
+      outputs[WAVE2_OUTPUT].setVoltage(5.f * osc[ch].getWave(1), ch);
     } else {
-      outputs[WAVE1_OUTPUT].setVoltage(5.f * osc[ch].getWave2(), ch);
-      outputs[WAVE2_OUTPUT].setVoltage(5.f * osc[ch].getWave(), ch);
+      outputs[WAVE1_OUTPUT].setVoltage(5.f * osc[ch].getWave(1), ch);
+      outputs[WAVE2_OUTPUT].setVoltage(5.f * osc[ch].getWave(0), ch);
     }
   }
 }
