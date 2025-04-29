@@ -53,7 +53,7 @@ void Sjoegele::start(int c) {
 	g += 1.2f * inputs[G_INPUT].getPolyVoltage(c);
 	th1 = M_PI * (1.f - th1);
 	th2 = M_PI * (1.f - th2);
-	l = exp10f(l);
+	l = powf(10.f, l);
 	g = 9.8f * exp2_taylor5(g);
 
 	pend[c].init(th1, th2, l, g);
