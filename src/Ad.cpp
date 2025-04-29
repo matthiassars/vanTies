@@ -238,7 +238,7 @@ void Ad::process(const ProcessArgs& args) {
 
 							cvBufferDelay /= .95f;
 							// exponential mapping
-							cvBufferDelay = (exp10f(cvBufferDelay) - 1.f) / 9.f;
+							cvBufferDelay = (powf(10.f, cvBufferDelay) - 1.f) / 9.f;
 							buf[c].setDelayRel(cvBufferDelay);
 							buf[c].push(.1f * inputs[CVBUFFER_INPUT].getPolyVoltage(c));
 						}

@@ -79,12 +79,6 @@ void Bufke::onExpanderChange(const ExpanderChangeEvent& e) {
 		masterChannels = &leftAdje->channels;
 		masterIsReset = &leftAdje->isReset;
 		masterIsRandomized = &leftAdje->isRandomized;
-	// } else if (leftModule && leftModule->getModel() == modelHuub) {
-	// 	Huub* leftHuub = static_cast<Huub*>(leftModule);
-	// 	masterBuf = &leftHuub->buf;
-	// 	masterChannels = &leftHuub->channels;
-	// 	masterIsReset = &leftHuub->isReset;
-	// 	masterIsRandomized = &leftHuub->isRandomized;
 	} else if (leftModule && leftModule->getModel() == modelBufke) {
 		Bufke* leftBufke = static_cast<Bufke*>(leftModule);
 		masterBuf = &leftBufke->buf;
@@ -179,7 +173,7 @@ void Bufke::process(const ProcessArgs& args) {
 
 							cvBufferDelay /= .95f;
 							// exponential mapping
-							cvBufferDelay = (exp10f(cvBufferDelay) - 1.f) / 9.f;
+							cvBufferDelay = (powf(10.f, cvBufferDelay) - 1.f) / 9.f;
 							cvBufferDelay = clamp(cvBufferDelay, -1.f, 1.f);
 							buf.setDelayRel(cvBufferDelay);
 							buf.push(inputs[CVBUFFER_INPUT].getVoltage());
