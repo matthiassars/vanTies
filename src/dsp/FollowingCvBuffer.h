@@ -1,6 +1,4 @@
 #pragma once
-#include <iostream>
-#include "rack.hpp"
 #include "CvBuffer.h"
 
 class FollowingCvBuffer : public CvBuffer {
@@ -15,6 +13,13 @@ public:
 
   void setMasterCvBuffer(CvBuffer* masterCvBuffer) {
     this->masterCvBuffer = masterCvBuffer;
+  }
+
+  void setFrozen(bool frozen) {
+    this->frozen =
+      (masterCvBuffer && followMode == GET_DELAY_TIME) ?
+      masterCvBuffer->isFrozen() :
+      frozen;
   }
 
   void process() override;

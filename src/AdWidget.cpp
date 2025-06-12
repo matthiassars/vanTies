@@ -17,49 +17,64 @@ void AdSpectrumWidget::drawLayer(const DrawArgs& args, int layer) {
 
 			nvgStrokeWidth(args.vg, 1.5f);
 
-			for (int i = module->spec[c].getHighest() - 1;
-				i >= module->spec[c].getLowest() - 1; i--) {
-				float x = abs(1.f + i * module->osc[c].getStretch()) * x1;
-				if (x > 0.f && x < box.size.x) {
-					float yL = abs(module->spec[c].getAmp(i));
-					float yR = abs(module->spec[c].getAmpR(i));
-					// Map the amplitudes logaritmically
-					// to corresponding y-values: 1 -> 1, 2^-9 -> 1/16 .
-					if (yL > .00128858194411415455f) {
-						yL = log2f(yL);
-						yL *= .10416666666666666667f;
-						yL += 1.f;
-						yL *= box.size.y;
+			if (module->spec[c].getStereoMode() != Spectrum::MONO) {
+				for (int i = module->spec[c].getHighest() - 1;
+					i >= module->spec[c].getLowest() - 1; i--) {
+					float x = abs(1.f + i * module->osc[c].getStretch()) * x1;
+					if (x > 0.f && x < box.size.x) {
+						float yL = abs(module->spec[c].getAmp(i, 0));
+						float yR = abs(module->spec[c].getAmp(i, 1));
+						// Map the amplitudes logaritmically
+						// to corresponding y-values: 1 -> 1, 2^-9 -> 1/16 .
+						yL = (yL > .00128858194411415455f) ?
+							box.size.y * (.10416666666666666667f * log2f(yL) + 1.f) :
+							0.f;
+						yR = (yR > .00128858194411415455f) ?
+							box.size.y * (.10416666666666666667f * log2f(yR) + 1.f) :
+							0.f;
+						// Draw the spectral lines.
+						if (yL > yR) {
+							nvgStrokeColor(args.vg, nvgRGBf(1.f, 1.f, .75f));
+							nvgBeginPath(args.vg);
+							nvgMoveTo(args.vg, x, box.size.y);
+							nvgLineTo(args.vg, x, box.size.y - yL);
+							nvgStroke(args.vg);
+							nvgStrokeColor(args.vg, nvgRGBf(1.f, .75f, .625f));
+							nvgBeginPath(args.vg);
+							nvgMoveTo(args.vg, x, box.size.y);
+							nvgLineTo(args.vg, x, box.size.y - yR);
+						} else {
+							nvgStrokeColor(args.vg, nvgRGBf(1.f, .5f, .5f));
+							nvgBeginPath(args.vg);
+							nvgMoveTo(args.vg, x, box.size.y);
+							nvgLineTo(args.vg, x, box.size.y - yR);
+							nvgStroke(args.vg);
+							nvgStrokeColor(args.vg, nvgRGBf(1.f, .75f, .625f));
+							nvgBeginPath(args.vg);
+							nvgMoveTo(args.vg, x, box.size.y);
+							nvgLineTo(args.vg, x, box.size.y - yL);
+						}
+						nvgStroke(args.vg);
 					}
-					if (yR > .00128858194411415455f) {
-						yR = log2f(yR);
-						yR *= .10416666666666666667f;
-						yR += 1.f;
-						yR *= box.size.y;
-					}
-					// Draw the spectral lines.
-					if (yL > yR) {
+				}
+			} else {
+				for (int i = module->spec[c].getHighest() - 1;
+					i >= module->spec[c].getLowest() - 1; i--) {
+					float x = abs(1.f + i * module->osc[c].getStretch()) * x1;
+					if (x > 0.f && x < box.size.x) {
+						float y = abs(module->spec[c].getAmp(i));
+						// Map the amplitudes logaritmically
+						// to corresponding y-values: 1 -> 1, 2^-9 -> 1/16 .
+						y = (y > .00128858194411415455f) ?
+							box.size.y * (.10416666666666666667f * log2f(y) + 1.f) :
+							0.f;
+						// Draw the spectral lines.
 						nvgStrokeColor(args.vg, nvgRGBf(1.f, 1.f, .75f));
 						nvgBeginPath(args.vg);
 						nvgMoveTo(args.vg, x, box.size.y);
-						nvgLineTo(args.vg, x, box.size.y - yL);
+						nvgLineTo(args.vg, x, box.size.y - y);
 						nvgStroke(args.vg);
-						nvgStrokeColor(args.vg, nvgRGBf(1.f, .75f, .625f));
-						nvgBeginPath(args.vg);
-						nvgMoveTo(args.vg, x, box.size.y);
-						nvgLineTo(args.vg, x, box.size.y - yR);
-					} else {
-						nvgStrokeColor(args.vg, nvgRGBf(1.f, .5f, .5f));
-						nvgBeginPath(args.vg);
-						nvgMoveTo(args.vg, x, box.size.y);
-						nvgLineTo(args.vg, x, box.size.y - yR);
-						nvgStroke(args.vg);
-						nvgStrokeColor(args.vg, nvgRGBf(1.f, .75f, .625f));
-						nvgBeginPath(args.vg);
-						nvgMoveTo(args.vg, x, box.size.y);
-						nvgLineTo(args.vg, x, box.size.y - yL);
 					}
-					nvgStroke(args.vg);
 				}
 			}
 		}

@@ -1,6 +1,7 @@
 #pragma once
-#include <iostream>
-#include "rack.hpp"
+#include <cmath>
+#include <algorithm>
+#include <limits.h>
 
 // a class for the CV buffer
 class CvBuffer {
@@ -11,16 +12,17 @@ public:
     RANDOM
   };
 
-  void init(int size, int oscs, Mode* mode);
+  void init(int size, int oscs, Mode* mode, int maxClock = INT_MAX);
 
   ~CvBuffer();
 
   void setLowestHighest(float lowest, float highest);
   // Set the delay time, relative to the buffer size. 1.f is maximum
-  void setDelayRel(float delayRel);
+  void setDelayRel(float delayRel) {
+    this->delayRel = std::min(std::max(delayRel, -1.f), 1.f);
+  }
   void setOn(bool on) { this->on = on; }
   void setFrozen(bool frozen) { this->frozen = frozen; }
-  void unfreeze() { frozen = true; }
   void setClocked(bool clocked) { this->clocked = clocked; }
   void setClockTrigger(bool clTrigger) { this->clTrigger = clTrigger; }
 
@@ -69,13 +71,24 @@ protected:
   bool clocked = false;
   int clTime = 0;
   int clCounter = 0;
-  bool clTrigger;
+  bool clTrigger = false;
   bool clIsTriggered = false;
   int clMult = 0;
+  int maxClock = 0;
 
   ////////////////////////////////////////////////////////////////////////////
 
-  float getValue_buf(int i);
-  int posRead(int i);
+  float getValue_buf(int i) {
+    return (i >= 0 && i < size) ?
+      buf[(size + posWrite - i - 1) % size] :
+      0.f;
+  }
+
+  int posRead(int i) {
+    return (*mode != RANDOM) ?
+      delay * ((delay > 0) ? (i - lowest + 1) : (i - highest)) :
+      (int)(abs(delay) * random[i % oscs] * ((clocked) ? (highest - lowest) : 1));
+  }
+
   virtual void processClock();
 };

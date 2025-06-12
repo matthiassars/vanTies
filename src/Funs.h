@@ -17,7 +17,7 @@
 
 struct Funs : Module {
   enum ParamId {
-    VPOCT_PARAM,
+    PITCH_PARAM,
     FMAMT_PARAM,
     XMAX_PARAM,
     A_PARAM,
@@ -46,20 +46,21 @@ struct Funs : Module {
   };
 
   enum PitchQuant {
-		CONTINUOUS,
-		SEMITONES,
-		OCTAVES
-	};
+    CONTINUOUS,
+    SEMITONES,
+    OCTAVES
+  };
 
   Funs();
 
   RatFuncOscillator osc[16];
 
-  int channels = 1;
+  int channels = 0;
   PitchQuant pitchQuant = CONTINUOUS;
-  
+
   json_t* dataToJson() override;
   void dataFromJson(json_t* rootJ) override;
+  void onSampleRateChange(const SampleRateChangeEvent& e) override;
   void process(const ProcessArgs& args) override;
 };
 

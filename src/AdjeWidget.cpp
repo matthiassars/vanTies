@@ -15,12 +15,9 @@ void AdjeSpectrumWidget::drawLayer(const DrawArgs& args, int layer) {
 			float y = abs(module->amp[i]);
 			// Map the amplitudes logaritmically
 			// to corresponding y-values: 1 -> 1, 2^-9 -> 1/16 .
-			if (y > .00128858194411415455f) {
-				y = log2f(y);
-				y *= .10416666666666666667f;
-				y += 1.f;
-				y *= box.size.y;
-			}
+			y = (y > .00128858194411415455f) ?
+				box.size.y * (.10416666666666666667f * log2f(y) + 1.f) :
+				0.f;
 			// Draw the spectral lines.
 			nvgStrokeColor(args.vg, nvgRGBf(1.f, 1.f, .75f));
 			nvgBeginPath(args.vg);

@@ -1,6 +1,5 @@
 #pragma once
-#include <iostream>
-#include "rack.hpp"
+#include <algorithm>
 #include "Oscillator.h"
 
 class RatFuncOscillator : public Oscillator<1, 2> {
@@ -11,7 +10,7 @@ private:
   float b;
   float c;
 
-  static constexpr float SQRT2M1 = M_SQRT2 - 1.f;
+  static constexpr float SQRT2M1 = M_SQRT2f - 1.f;
 
   float phaseDistort1_1(float x, float c1);
   float phaseDistort2_1(float x, float c1);

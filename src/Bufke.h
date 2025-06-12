@@ -28,12 +28,12 @@ struct Bufke : Module {
 		LIGHTS_LEN
 	};
 
-	CvBuffer::Mode cvBufferMode = CvBuffer::Mode::LOW_HIGH;
+	CvBuffer::Mode cvBufferMode = CvBuffer::LOW_HIGH;
 	bool emptyOnReset = false;
 
 	int lowest = 0;
 	int highest = 0;
-	int channels = 16;
+	int channels = 06;
 
 	bool resetSignal = false;
 

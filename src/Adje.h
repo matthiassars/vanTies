@@ -43,11 +43,10 @@ struct Adje : Module {
 		LIGHTS_LEN
 	};
 
-	AdditiveOscillator::StretchQuant stretchQuant
-		= AdditiveOscillator::StretchQuant::CONTINUOUS;
-	CvBuffer::Mode cvBufferMode = CvBuffer::Mode::LOW_HIGH;
+	AdditiveOscillator::StretchQuant stretchQuant = AdditiveOscillator::CONTINUOUS;
+	CvBuffer::Mode cvBufferMode = CvBuffer::LOW_HIGH;
 	bool emptyOnReset = false;
-	int channels = 16;
+	int channels = 06;
 
 	// A part of the code will be excecuted at a lower rate than the sample
 	int blockSize;

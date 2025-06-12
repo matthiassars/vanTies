@@ -35,7 +35,7 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
       nvgBeginPath(args.vg);
       nvgCircle(args.vg,
         module->osc[c].phaseDistortInv2(module->osc[c].getB()) * box.size.x,
-        (.5f - .5f * M_SQRT1_2) * box.size.y,
+        (.5f - .5f * M_SQRT1_2f) * box.size.y,
         1.f);
       nvgFill(args.vg);
       nvgBeginPath(args.vg);
@@ -47,7 +47,7 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
       nvgBeginPath(args.vg);
       nvgCircle(args.vg,
         module->osc[c].phaseDistortInv2(1.f - module->osc[c].getB()) * box.size.x,
-        (.5f + .5f * M_SQRT1_2) * box.size.y,
+        (.5f + .5f * M_SQRT1_2f) * box.size.y,
         1.f);
       nvgFill(args.vg);
 
@@ -82,7 +82,7 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
       nvgBeginPath(args.vg);
       nvgCircle(args.vg,
         module->osc[c].phaseDistortInv1(module->osc[c].getB()) * box.size.x,
-        (.5f - .5f * M_SQRT1_2) * box.size.y,
+        (.5f - .5f * M_SQRT1_2f) * box.size.y,
         1.f);
       nvgFill(args.vg);
       nvgBeginPath(args.vg);
@@ -94,7 +94,7 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
       nvgBeginPath(args.vg);
       nvgCircle(args.vg,
         module->osc[c].phaseDistortInv1(1.f - module->osc[c].getB()) * box.size.x,
-        (.5f + .5f * M_SQRT1_2) * box.size.y,
+        (.5f + .5f * M_SQRT1_2f) * box.size.y,
         1.f);
       nvgFill(args.vg);
     }
@@ -123,7 +123,7 @@ FunsWidget::FunsWidget(Funs* module) {
     RACK_GRID_HEIGHT - RACK_GRID_WIDTH)));
 
   addParam(createParamCentered<RoundLargeBlackKnob>(
-    mm2px(Vec(10.16, 46)), module, Funs::VPOCT_PARAM));
+    mm2px(Vec(10.16, 46)), module, Funs::PITCH_PARAM));
   addParam(createParamCentered<RoundLargeBlackKnob>(
     mm2px(Vec(30.48, 46)), module, Funs::C_PARAM));
   addParam(createParamCentered<RoundLargeBlackKnob>(

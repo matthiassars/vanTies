@@ -1,48 +1,48 @@
 #pragma once
-#include <iostream>
 #include <cmath>
-#include "rack.hpp"
 
 // an abstract class for oscillators
-template <size_t phasors = 1, size_t waveforms = 1>
+template <int phasors = 1, int waveforms = 1>
 class Oscillator {
-protected:
+public:
   static constexpr float TWOPI = 2.f * M_PI;
 
-  double dPhase[phasors] = {};
-  double phase[phasors] = {};
+  int sampleRate = 0;
+  float sampleTime = 0.f;
+
+  double dPh[phasors] = {};
+  double ph[phasors] = {};
   float wave[waveforms] = {};
 
   void incrementPhases() {
-    for (size_t i = 0; i < phasors; i++) {
-      phase[i] += dPhase[i];
-      phase[i] -= floorf(phase[i]);
+    for (int i = 0; i < phasors; i++) {
+      ph[i] += dPh[i];
+      ph[i] -= floorf(ph[i]);
     }
   }
 
 public:
-  void setFreq(float freq, size_t i = 0) {
-    dPhase[i] = freq * APP->engine->getSampleTime();
+  void setSampleRate(int sampleRate) {
+    this->sampleRate = sampleRate;
+    sampleTime = 1.f / sampleRate;
   }
 
-  float getFreq(size_t i = 0) {
-    if (i > phasors)
-      return 0.f;
-    return dPhase[i] * APP->engine->getSampleRate();
+  inline void setFreq(float freq, int i = 0) {
+    dPh[i] = freq * sampleTime;
   }
 
-  float getWave(size_t i = 0) {
-    if (i > waveforms)
-      return 0.f;
-    return wave[i];
+  inline float getFreq(int i = 0) {
+    return dPh[i] * sampleRate;
   }
+
+  inline float getWave(int i = 0) { return wave[i]; }
 
   virtual void process() = 0;
 
-  void reset() {
-    for (size_t i = 0; i < phasors; i++)
-      phase[i] = 0.;
-    for (size_t i = 0; i < waveforms; i++)
+  inline void reset() {
+    for (int i = 0; i < phasors; i++)
+      ph[i] = 0.;
+    for (int i = 0; i < waveforms; i++)
       wave[i] = 0.f;
   }
 };

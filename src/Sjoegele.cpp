@@ -6,27 +6,26 @@ using namespace dsp;
 Sjoegele::Sjoegele() {
 	config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 
-	configParam(TH1_PARAM, -1.f, 1.f, 0.f,
-		"\u03b8\u2081");
-	configParam(TH2_PARAM, -1.f, 1.f, 0.f,
-		"\u03b8\u2082");
-	configParam(L_PARAM, -2.f, 2.f, 0.f,
+	configParam(L_PARAM, -6.f, 0.f, 0.f,
 		"length");
-	configParam(G_PARAM, -5.f, 5.f, 0.f,
+	configParam(G_PARAM, -6.f, 6.f, 0.f,
 		"gravity");
+	configParam(FRICTION_PARAM, 0.f, 1.f, 0.f,
+		"friction");
 
 	configButton(INIT_PARAM, "start");
 
-	configInput(TH1_INPUT, "\u03b8\u2081");
-	configInput(TH2_INPUT, "\u03b8\u2082");
 	configInput(L_INPUT, "length");
 	configInput(G_INPUT, "gravity");
+	configInput(FRICTION_INPUT, "friction");
 	configInput(INIT_INPUT, "start");
 
 	configOutput(X1_OUTPUT, "x\u2081");
 	configOutput(Y1_OUTPUT, "y\u2081");
 	configOutput(X2_OUTPUT, "x\u2082");
 	configOutput(Y2_OUTPUT, "y\u2082");
+	configOutput(TH1IS0_OUTPUT, "\u03b8\u2081 = 0");
+	configOutput(TH2IS0_OUTPUT, "\u03b8\u2082 = 0");
 }
 
 json_t* Sjoegele::dataToJson() {
@@ -42,21 +41,35 @@ void Sjoegele::dataFromJson(json_t* rootJ) {
 		x2y2Relative = json_boolean_value(x2y2RelativeJ);
 }
 
+void Sjoegele::onSampleRateChange(const SampleRateChangeEvent& e) {
+	Module::onSampleRateChange(e);
+	for (int c = 0; c < 16; c++)
+		pend[c].setSampleRate(APP->engine->getSampleRate());
+}
+
+void Sjoegele::onReset(const ResetEvent& e) {
+	Module::onReset(e);
+	for (int c = 0; c < channels; c++)
+		start(c);
+}
+
+void Sjoegele::onRandomize(const RandomizeEvent& e) {
+	Module::onRandomize(e);
+	for (int c = 0; c < channels; c++)
+		start(c);
+}
+
 void Sjoegele::start(int c) {
-	float th1 = params[TH1_PARAM].getValue();
-	float th2 = params[TH2_PARAM].getValue();
 	float l = params[L_PARAM].getValue();
 	float g = params[G_PARAM].getValue();
-	th1 += .2f * inputs[TH1_INPUT].getPolyVoltage(c);
-	th2 += .2f * inputs[TH2_INPUT].getPolyVoltage(c);
 	l += .4f * inputs[L_INPUT].getPolyVoltage(c);
 	g += 1.2f * inputs[G_INPUT].getPolyVoltage(c);
-	th1 = M_PI * (1.f - th1);
-	th2 = M_PI * (1.f - th2);
 	l = powf(10.f, l);
 	g = 9.8f * exp2_taylor5(g);
 
-	pend[c].init(th1, th2, l, g);
+	pend[c].setLength(l);
+	pend[c].setGravity(g);
+	pend[c].init();
 }
 
 void Sjoegele::process(const ProcessArgs& args) {
@@ -67,13 +80,18 @@ void Sjoegele::process(const ProcessArgs& args) {
 		outputs[o].setChannels(channels);
 
 	for (int c = 0; c < channels; c++) {
+		float cof = params[FRICTION_PARAM].getValue();
+		cof += .1f * inputs[FRICTION_INPUT].getPolyVoltage(c);
+		cof = pow(10.f, 8.f * cof) - 1.f;
+		// cof *= 1.e8f;
+		pend[c].setCOF(cof);
+
 		initSignal[c] = (params[INIT_PARAM].getValue() > 0.f)
 			|| (inputs[INIT_INPUT].getPolyVoltage(c) > 2.5f);
 		if ((initSignal[c] && !isInit[c]) || startUp) {
 			start(c);
 
 			isInit[c] = true;
-			startUp = false;
 		} else {
 			if (!initSignal[c])
 				isInit[c] = false;
@@ -90,7 +108,11 @@ void Sjoegele::process(const ProcessArgs& args) {
 			outputs[X2_OUTPUT].setVoltage(2.5f * pend[c].getX2Abs(), c);
 			outputs[Y2_OUTPUT].setVoltage(2.5f * (pend[c].getY2Abs() + 2.f), c);
 		}
+		outputs[TH1IS0_OUTPUT].setVoltage((pend[c].th1Is0()) ? 5.f : 0.f, c);
+		outputs[TH2IS0_OUTPUT].setVoltage((pend[c].th2Is0()) ? 5.f : 0.f, c);
 	}
+
+	startUp = false;
 }
 
 Model* modelSjoegele = createModel<Sjoegele, SjoegeleWidget>("Sjoegele");

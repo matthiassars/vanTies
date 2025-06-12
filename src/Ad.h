@@ -62,29 +62,41 @@ struct Ad : Module {
 	// Distribute the partials over the left and right channels, in such a way
 	// that for any value of the sieve parameter, the two channels are pretty much in
 	// balance. 
-	// For 128 oscillators, 1 we need 27 bools (leave out the fundamental)
-	bool partialLeft[127] = {
-		false, true, true, false, false, true, false, true, true, false,
-		false, true, false, false, true, false, true, true, true, true,
-		true, false, false, false, false, true, false, true, true, false,
-		false, false, true, true, false, true, false, true, false, false,
-		false, true, true, true, true, false, true, true, false, false,
-		false, true, false, false, false, true, false, false, true, true,
-		true, true, true, true, true, false, true, false, false, true,
-		true, false, false, false, false, false, false, true, true, false,
-		true, false, true, false, false, true, true, true, false, true,
-		true, false, true, true, true, false, false, false, true, true,
-		true, false, false, true, false, true, false, false, true, true,
-		false, true, false, false, false, true, true, false, false, false,
-		false, false, true, true, true, false, false
-	};
+	// For 128 oscillators, 1 we need 27 ints (leave out the fundamental)
+	int partialChan[2][127] = { {
+		1, 0, 0, 1, 1, 0, 1, 0, 0, 1,
+		1, 0, 1, 1, 0, 1, 0, 0, 0, 0,
+		0, 1, 1, 1, 1, 0, 1, 0, 0, 1,
+		1, 1, 0, 0, 1, 0, 1, 0, 1, 1,
+		1, 0, 0, 0, 0, 1, 0, 0, 1, 1,
+		1, 0, 1, 1, 1, 0, 1, 1, 0, 0,
+		0, 0, 0, 0, 0, 1, 0, 1, 1, 0,
+		0, 1, 1, 1, 1, 1, 1, 0, 0, 1,
+		0, 1, 0, 1, 1, 0, 0, 0, 1, 0,
+		0, 1, 0, 0, 0, 1, 1, 1, 0, 0,
+		0, 1, 1, 0, 1, 0, 1, 1, 0, 0,
+		1, 0, 1, 1, 1, 0, 0, 1, 1, 1,
+		1, 1, 0, 0, 0, 1, 1
+	},{
+		0, 1, 1, 0, 0, 1, 0, 1, 1, 0,
+		0, 1, 0, 0, 1, 0, 1, 1, 1, 1,
+		1, 0, 0, 0, 0, 1, 0, 1, 1, 0,
+		0, 0, 1, 1, 0, 1, 0, 1, 0, 0,
+		0, 1, 1, 1, 1, 0, 1, 1, 0, 0,
+		0, 1, 0, 0, 0, 1, 0, 0, 1, 1,
+		1, 1, 1, 1, 1, 0, 1, 0, 0, 1,
+		1, 0, 0, 0, 0, 0, 0, 1, 1, 0,
+		1, 0, 1, 0, 0, 1, 1, 1, 0, 1,
+		1, 0, 1, 1, 1, 0, 0, 0, 1, 1,
+		1, 0, 0, 1, 0, 1, 0, 0, 1, 1,
+		0, 1, 0, 0, 0, 1, 1, 0, 0, 0,
+		0, 0, 1, 1, 1, 0, 0
+	} };
 
-	PitchQuant pitchQuant = PitchQuant::CONTINUOUS;
-	AdditiveOscillator::StretchQuant stretchQuant
-		= AdditiveOscillator::StretchQuant::CONTINUOUS;
-	SpectrumStereo::StereoMode stereoMode
-		= SpectrumStereo::StereoMode::SOFT_PAN;
-	CvBuffer::Mode cvBufferMode = CvBuffer::Mode::LOW_HIGH;
+	PitchQuant pitchQuant = CONTINUOUS;
+	AdditiveOscillator::StretchQuant stretchQuant = AdditiveOscillator::CONTINUOUS;
+	Spectrum::StereoMode stereoMode = Spectrum::SOFT_PAN;
+	CvBuffer::Mode cvBufferMode = CvBuffer::LOW_HIGH;
 	bool emptyOnReset = false;
 
 	// A part of the code will be excecuted at a lower rate than the sample
@@ -97,7 +109,7 @@ struct Ad : Module {
 	float resetLight = 0.f;
 
 	CvBuffer buf[16];
-	SpectrumStereo spec[16];
+	Spectrum spec[16];
 	AdditiveOscillator osc[16];
 	SineOscillator fundOsc[16];
 

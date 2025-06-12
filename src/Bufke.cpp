@@ -22,7 +22,7 @@ Bufke::Bufke() {
 
 	buf.init(
 		4.f * APP->engine->getSampleRate() / (float)blockSize,
-		16,
+		31,
 		&cvBufferMode);
 	buf.setOn(true);
 
@@ -95,6 +95,7 @@ void Bufke::onExpanderChange(const ExpanderChangeEvent& e) {
 
 void Bufke::reset() {
 	if (!isReset) {
+		buf.empty();
 		buf.randomize();
 		isReset = true;
 		resetLight = 1.f;
@@ -150,13 +151,13 @@ void Bufke::process(const ProcessArgs& args) {
 					// Add the CV values to the knob values for the rest of the
 					// parameters
 					cvBufferDelay +=
-						.11f * inputs[CVBUFFER_DELAY_INPUT].getVoltage();
+						.1f * inputs[CVBUFFER_DELAY_INPUT].getVoltage();
 
 					if (inputs[CVBUFFER_INPUT].isConnected()) {
 						buf.setOn(true);
 
 						if (inputs[CVBUFFER_CLOCK_INPUT].isConnected()
-							|| (buf.followMode == FollowingCvBuffer::FollowMode::SYNC
+							|| (buf.followMode == FollowingCvBuffer::SYNC
 								&& masterBuf
 								&& masterBuf->isClocked())
 							) {
@@ -166,18 +167,12 @@ void Bufke::process(const ProcessArgs& args) {
 						} else
 							buf.setClocked(false);
 
-						if (abs(cvBufferDelay) > 1.05f)
-							buf.setFrozen(true);
-						else {
-							buf.setFrozen(false);
-
-							cvBufferDelay /= .95f;
-							// exponential mapping
-							cvBufferDelay = (powf(10.f, cvBufferDelay) - 1.f) / 9.f;
-							cvBufferDelay = clamp(cvBufferDelay, -1.f, 1.f);
-							buf.setDelayRel(cvBufferDelay);
-							buf.push(inputs[CVBUFFER_INPUT].getVoltage());
-						}
+						buf.setFrozen(abs(cvBufferDelay) > .95f);
+						cvBufferDelay /= .95f;
+						// exponential mapping
+						cvBufferDelay = (powf(10.f, cvBufferDelay) - 1.f) / 9.f;
+						buf.setDelayRel(cvBufferDelay);
+						buf.push(inputs[CVBUFFER_INPUT].getVoltage());
 						buf.process();
 					} else
 						buf.setOn(false);

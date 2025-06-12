@@ -97,7 +97,7 @@ void Adje::onSampleRateChange(const SampleRateChangeEvent& e) {
 	blockSize = min(64, (int)(APP->engine->getSampleRate() / 750.f));
 	blockCounter = rand() % blockSize;
 
-	spec.setCRRatio(1.f / (float)blockSize);
+	spec.setSmoothCoeff(1.f / (float)blockSize);
 	// 4 seconds buffer
 	buf.resize(
 		(int)(4.f * APP->engine->getSampleRate() / (float)blockSize));
@@ -227,7 +227,6 @@ void Adje::process(const ProcessArgs& args) {
 						cvBufferDelay /= .95f;
 						// exponential mapping
 						cvBufferDelay = (powf(10.f, cvBufferDelay) - 1.f) / 9.f;
-						cvBufferDelay = clamp(cvBufferDelay, -1.f, 1.f);
 						buf.setDelayRel(cvBufferDelay);
 						buf.push(.1f * inputs[CVBUFFER_INPUT].getVoltage());
 					}
@@ -242,8 +241,7 @@ void Adje::process(const ProcessArgs& args) {
 		}
 		if (spec.ampsAre0() && !isRandomized) {
 			spec.set0();
-			if (cvBufferMode == CvBuffer::Mode::RANDOM)
-				buf.randomize();
+			buf.randomize();
 			isRandomized = true;
 			resetLight = 1.f;
 		} else if (!spec.ampsAre0()) {

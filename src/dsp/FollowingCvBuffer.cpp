@@ -6,9 +6,10 @@ void FollowingCvBuffer::process() {
   if (masterCvBuffer) {
     setLowestHighest(masterCvBuffer->getLowest(),
       masterCvBuffer->getHighest());
-    if (followMode == FollowMode::GET_DELAY_TIME)
+    if (followMode == GET_DELAY_TIME) {
       delay = masterCvBuffer->getDelay();
-    else
+      *mode = masterCvBuffer->getMode();
+    } else
       CvBuffer::process();
   } else {
     setLowestHighest(1, 16);
@@ -18,7 +19,7 @@ void FollowingCvBuffer::process() {
 
 void FollowingCvBuffer::processClock() {
   if (masterCvBuffer
-    && followMode == FollowMode::SYNC
+    && followMode == SYNC
     && masterCvBuffer->isClocked())
     clTime = masterCvBuffer->getClockTime();
   else

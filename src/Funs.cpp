@@ -13,7 +13,7 @@ using namespace dsp;
 Funs::Funs() {
   config(PARAMS_LEN, INPUTS_LEN, OUTPUTS_LEN, LIGHTS_LEN);
 
-  configParam(VPOCT_INPUT, 0.f, 6.f, 4.f, "pitch");
+  configParam(PITCH_PARAM, 0.f, 6.f, 4.f, "pitch");
   configParam(FMAMT_PARAM, 0.f, 1.f, 0.f, "FM amount");
   configParam(A_PARAM, 0.f, 1.f, .5f, "a");
   configParam(B_PARAM, 0.f, 1.f, .5f, "b");
@@ -31,7 +31,10 @@ Funs::Funs() {
   configOutput(WAVE1_OUTPUT, "wave 1");
   configOutput(WAVE2_OUTPUT, "wave 2");
 
-  getParamQuantity(VPOCT_PARAM)->randomizeEnabled = false;
+  getParamQuantity(PITCH_PARAM)->randomizeEnabled = false;
+
+  for (int c = 0; c < 16; c++)
+    osc[c].setSampleRate(APP->engine->getSampleRate());
 }
 
 
@@ -48,6 +51,13 @@ void Funs::dataFromJson(json_t* rootJ) {
     pitchQuant = (PitchQuant)json_integer_value(pitchQuantJ);
 }
 
+void Funs::onSampleRateChange(const SampleRateChangeEvent& e) {
+  Module::onSampleRateChange(e);
+  for (int c = 0; c < 16; c++) {
+    osc[c].setSampleRate(APP->engine->getSampleRate());
+  }
+}
+
 void Funs::process(const ProcessArgs& args) {
   // Get the number of polyphony channels from the V/oct input.
   channels = max(inputs[VPOCT_INPUT].getChannels(), 1);
@@ -55,7 +65,7 @@ void Funs::process(const ProcessArgs& args) {
   outputs[WAVE2_OUTPUT].setChannels(channels);
 
   for (int ch = 0; ch < channels; ch++) {
-    float pitch = params[VPOCT_PARAM].getValue();
+    float pitch = params[PITCH_PARAM].getValue();
 
     if (pitchQuant == OCTAVES)
       pitch = round(pitch);

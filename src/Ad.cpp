@@ -57,9 +57,9 @@ Ad::Ad() {
 			4.f * APP->engine->getSampleRate() / (float)blockSize,
 			128,
 			&cvBufferMode);
-		spec[c].init(128, &buf[c], partialLeft);
-		spec[c].setFlip(c % 2);
-		osc[c].init(&spec[c]);
+		spec[c].init(128, &buf[c], 2, partialChan[c % 2]);
+		osc[c].init(APP->engine->getSampleRate(), &spec[c]);
+		fundOsc[c].setSampleRate(APP->engine->getSampleRate());
 	}
 
 	reset(true);
@@ -89,7 +89,7 @@ void Ad::dataFromJson(json_t* rootJ) {
 		stretchQuant = (AdditiveOscillator::StretchQuant)json_integer_value(stretchQuantJ);
 	json_t* stereoModeJ = json_object_get(rootJ, "stereoMode");
 	if (stereoModeJ)
-		stereoMode = (SpectrumStereo::StereoMode)json_integer_value(stereoModeJ);
+		stereoMode = (Spectrum::StereoMode)json_integer_value(stereoModeJ);
 	json_t* cvBufferModeJ = json_object_get(rootJ, "cvBufferMode");
 	if (cvBufferModeJ)
 		cvBufferMode = (CvBuffer::Mode)json_integer_value(cvBufferModeJ);
@@ -114,7 +114,9 @@ void Ad::onSampleRateChange(const SampleRateChangeEvent& e) {
 	blockCounter = rand() % blockSize;
 
 	for (int c = 0; c < 16; c++) {
-		spec[c].setCRRatio(1.f / (float)blockSize);
+		osc[c].setSampleRate(APP->engine->getSampleRate());
+		fundOsc[c].setSampleRate(APP->engine->getSampleRate());
+		spec[c].setSmoothCoeff(1.f / (float)blockSize);
 		// 4 seconds buffer
 		buf[c].resize(
 			(int)(4.f * APP->engine->getSampleRate() / (float)blockSize));
@@ -248,10 +250,10 @@ void Ad::process(const ProcessArgs& args) {
 						spec[c].setComb(cvBufferDelay);
 					}
 
-					if (!outputs[SUM_R_OUTPUT].isConnected())
-						spec[c].setStereoMode(SpectrumStereo::StereoMode::MONO);
-					else
-						spec[c].setStereoMode(stereoMode);
+					spec[c].setStereoMode((outputs[SUM_R_OUTPUT].isConnected()) ?
+						stereoMode :
+						Spectrum::MONO
+					);
 
 					spec[c].process();
 				}
@@ -263,9 +265,9 @@ void Ad::process(const ProcessArgs& args) {
 
 				float pitch = params[PITCH_PARAM].getValue();
 				// Quantize the pitch knob.
-				if (pitchQuant == PitchQuant::OCTAVES)
+				if (pitchQuant == OCTAVES)
 					pitch = round(pitch);
-				else if (pitchQuant == PitchQuant::SEMITONES)
+				else if (pitchQuant == SEMITONES)
 					pitch = round(12.f * pitch) / 12.f;
 				// Add the CV values to the knob values for pitch, fm and stretch.
 				pitch += inputs[VPOCT_INPUT].getPolyVoltage(c);
@@ -291,16 +293,14 @@ void Ad::process(const ProcessArgs& args) {
 
 			if (spec[c].ampsAre0() && !isRandomized[c]) {
 				osc[c].reset();
-				if (cvBufferMode == CvBuffer::Mode::RANDOM)
-					buf[c].randomize();
+				buf[c].randomize();
 				isRandomized[c] = true;
 				resetLight = 1.f;
-			} else if (!spec[c].ampsAre0()) {
-				spec[c].smoothen();
-				osc[c].process();
+			} else if (!spec[c].ampsAre0())
 				isRandomized[c] = false;
-			}
 
+			spec[c].smoothen();
+			osc[c].process();
 			fundOsc[c].process();
 
 			outputs[SUM_L_OUTPUT].setVoltage(5.f * osc[c].getWave(0), c);
