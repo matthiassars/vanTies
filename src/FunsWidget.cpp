@@ -1,5 +1,7 @@
 #include "Funs.h"
 
+using namespace std;
+
 void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
   if (!module)
     return;
@@ -35,7 +37,7 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
       nvgBeginPath(args.vg);
       nvgCircle(args.vg,
         module->osc[c].phaseDistortInv2(module->osc[c].getB()) * box.size.x,
-        (.5f - .5f * M_SQRT1_2f) * box.size.y,
+        (.5f - .5f * M_SQRT1_2) * box.size.y,
         1.f);
       nvgFill(args.vg);
       nvgBeginPath(args.vg);
@@ -47,7 +49,7 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
       nvgBeginPath(args.vg);
       nvgCircle(args.vg,
         module->osc[c].phaseDistortInv2(1.f - module->osc[c].getB()) * box.size.x,
-        (.5f + .5f * M_SQRT1_2f) * box.size.y,
+        (.5f + .5f * M_SQRT1_2) * box.size.y,
         1.f);
       nvgFill(args.vg);
 
@@ -67,6 +69,7 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
           (.5f - .5f * module->osc[c].waveFunction1(x)) * box.size.y);
       nvgStroke(args.vg);
 
+
       nvgBeginPath(args.vg);
       nvgCircle(args.vg,
         module->osc[c].getC() * box.size.x,
@@ -82,7 +85,7 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
       nvgBeginPath(args.vg);
       nvgCircle(args.vg,
         module->osc[c].phaseDistortInv1(module->osc[c].getB()) * box.size.x,
-        (.5f - .5f * M_SQRT1_2f) * box.size.y,
+        (.5f - .5f * M_SQRT1_2) * box.size.y,
         1.f);
       nvgFill(args.vg);
       nvgBeginPath(args.vg);
@@ -94,7 +97,7 @@ void FunsScopeWidget::drawLayer(const DrawArgs& args, int layer) {
       nvgBeginPath(args.vg);
       nvgCircle(args.vg,
         module->osc[c].phaseDistortInv1(1.f - module->osc[c].getB()) * box.size.x,
-        (.5f + .5f * M_SQRT1_2f) * box.size.y,
+        (.5f + .5f * M_SQRT1_2) * box.size.y,
         1.f);
       nvgFill(args.vg);
     }

@@ -10,8 +10,8 @@ private:
   float b;
   float c;
 
-  static constexpr float SQRT2f = M_SQRT2;
-  static constexpr float SQRT2M1 = SQRT2f - 1.f;
+  static constexpr float SQRT2 = M_SQRT2;
+  static constexpr float SQRT2M1 = SQRT2 - 1.f;
 
   float phaseDistort1_1(float x, float c1);
   float phaseDistort2_1(float x, float c1);

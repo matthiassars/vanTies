@@ -27,8 +27,8 @@ float RatFuncOscillator::primaryWaveFunction_1(float x) {
   return min(max(
     (x * (2.f * x - 1.f) * (a - b) * (a - b))
     / (a * a * (2.f * SQRT2M1 * b * b - SQRT2M1 * b + x * (2.f * x - 1.f))
-      + b * x * (-2.f * a * (2.f * SQRT2M1 * b + 2.f * x - SQRT2f)
-        + b * (2.f * SQRT2f * x - 1.f)
+      + b * x * (-2.f * a * (2.f * SQRT2M1 * b + 2.f * x - SQRT2)
+        + b * (2.f * SQRT2 * x - 1.f)
         - SQRT2M1 * x)),
     -1.f), 1.f);
 }
@@ -57,7 +57,7 @@ float RatFuncOscillator::phaseDistortInv1_1(float x, float c1) {
         + 14.f * c2 * x - 4.f * c2 - 2.f * A * c1 * x2 - 3.f * A * x2
         + 2.f * A * c1 * x + 2.f * A * x + 11.f * c1 * x2 - 6.f * c1 * x
         + 2.f * c1 - 2.f * x2))
-    / (SQRT2f * (2.f * c2 + A - c1) * x);
+    / (SQRT2 * (2.f * c2 + A - c1) * x);
 }
 
 float RatFuncOscillator::phaseDistortInv2_1(float x, float c1) {
@@ -74,7 +74,7 @@ float RatFuncOscillator::phaseDistortInv2_1(float x, float c1) {
         + 14.f * c2 * x - 4.f * c2 + 2.f * A * c1 * x2 + 3.f * A * x2
         - 2.f * A * c1 * x - 2.f * A * x + 11.f * c1 * x2 - 6.f * c1 * x
         + 2.f * c1 - 2 * x2))
-    / (SQRT2f * (-2.f * c2 + A + c1) * x);
+    / (SQRT2 * (-2.f * c2 + A + c1) * x);
 }
 
 float RatFuncOscillator::phaseDistort1(float x) {
