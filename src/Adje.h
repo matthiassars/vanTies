@@ -46,7 +46,7 @@ struct Adje : Module {
 	AdditiveOscillator::StretchQuant stretchQuant = AdditiveOscillator::CONTINUOUS;
 	CvBuffer::Mode cvBufferMode = CvBuffer::LOW_HIGH;
 	bool emptyOnReset = false;
-	int channels = 06;
+	int channels = 16;
 
 	// A part of the code will be excecuted at a lower rate than the sample
 	int blockSize;

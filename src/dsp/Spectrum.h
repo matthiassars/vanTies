@@ -10,7 +10,7 @@ public:
     HARD_PAN
   };
 
-  void init(int oscs, CvBuffer* buf, int channels = 0, int* partialChan = nullptr);
+  void init(int oscs, CvBuffer* buf, int channels = 1, int* partialChan = nullptr);
 
   ~Spectrum();
 

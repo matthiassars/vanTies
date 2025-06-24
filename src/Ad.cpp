@@ -151,7 +151,7 @@ void Ad::process(const ProcessArgs& args) {
 		reset(true);
 	else {
 		// Get the number of polyphony channels from the V/oct input.
-		channels = clamp(inputs[VPOCT_INPUT].getChannels(), 1, 16);
+		channels = max(inputs[VPOCT_INPUT].getChannels(), 1);
 		outputs[SUM_L_OUTPUT].setChannels(channels);
 		outputs[SUM_R_OUTPUT].setChannels(channels);
 		outputs[FUND_OUTPUT].setChannels(channels);

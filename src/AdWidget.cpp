@@ -58,6 +58,7 @@ void AdSpectrumWidget::drawLayer(const DrawArgs& args, int layer) {
 					}
 				}
 			} else {
+				nvgStrokeColor(args.vg, nvgRGBf(1.f, 1.f, .75f));
 				for (int i = module->spec[c].getHighest() - 1;
 					i >= module->spec[c].getLowest() - 1; i--) {
 					float x = abs(1.f + i * module->osc[c].getStretch()) * x1;
@@ -69,7 +70,6 @@ void AdSpectrumWidget::drawLayer(const DrawArgs& args, int layer) {
 							box.size.y * (.10416666666666666667f * log2f(y) + 1.f) :
 							0.f;
 						// Draw the spectral lines.
-						nvgStrokeColor(args.vg, nvgRGBf(1.f, 1.f, .75f));
 						nvgBeginPath(args.vg);
 						nvgMoveTo(args.vg, x, box.size.y);
 						nvgLineTo(args.vg, x, box.size.y - y);

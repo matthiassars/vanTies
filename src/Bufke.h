@@ -5,6 +5,7 @@
 #include "vanTies.h"
 #include "dsp/FollowingCvBuffer.h"
 #include "Adje.h"
+#include "Huub.h"
 
 struct Bufke : Module {
 	enum ParamId {
