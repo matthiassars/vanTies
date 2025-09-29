@@ -98,7 +98,7 @@
 
       <p> Let’s have look at the front panel, and first at the knobs and jacks with yellow labels. There are five of these parameter knobs: <b>pitch</b>, <b>number of partials</b>, <b>tilt</b>, <b>stretch</b> and <b>sieve</b>, with corresponding CV inputs (for the pitch both a <b>V/octave</b> as well as an <b>FM input</b>), and bipolar attenuverters / a unipolar attenuator for FM.</p>
 
-      <p>On the bottom right there’s a corner where the background yellow and the labels are dark blue: here are the three output jacks: one for the <b>fundamental</b> wave (the first partial) and two for the <b>summed</b> (‘<b>Σ</b>’), labelled <b>Left</b> and <b>Right</b>. On the bottom left there’s a <b>reset</b> button with a corresponding input jack. On the top, the <b>spectrogram</b> is shown. The knob and jacks with red labels belong to the ‘<b>partial amplitudes / CV buffer</b>’ section: there’s a <b>delay time</b> knob with corresponding CV input (without attenuator), a <b>clock</b> and a <b>CV to buffer</b> input.</p>
+      <p>On the bottom right there’s a corner where the background yellow and the labels are dark blue: here are the three output jacks: one for the <b>root</b> wave (the fundamental, or octave transition thereof) and two for the <b>summed</b> (‘<b>Σ</b>’), labelled <b>Left</b> and <b>Right</b>. On the bottom left there’s a <b>reset</b> button with a corresponding input jack. On the top, the <b>spectrogram</b> is shown. The knob and jacks with red labels belong to the ‘<b>partial amplitudes / CV buffer</b>’ section: there’s a <b>delay time</b> knob with corresponding CV input (without attenuator), a <b>clock</b> and a <b>amp</b> input.</p>
 
       <h3>Parameters</h3>
 
@@ -106,7 +106,7 @@
 
       <h4>Pitch</h4>
 
-      <p>The pitch knob can be quantized in <b>octaves</b> or <b>semitones</b>. This only affects the knob, not the <b>V/octave</b> input. The <b>FM</b> jack provides linear through-0 FM. It only affects the main Σ outputs, not the fundamental output.</p>
+      <p>The pitch knob can be quantized in <b>octaves</b> or <b>semitones</b>. This only affects the knob, not the <b>V/octave</b> input. The <b>FM</b> jack provides linear through-0 FM. It only affects the main Σ outputs, not the root output.</p>
 
       <h4>Partials</h4>
 
@@ -136,7 +136,7 @@
 
       <h4>The ‘Partial Amplitudes / CV buffer’ Section</h4>
 
-      <p>As said the knob and input jacks with red labels all belong to the ‘<b>partial amplitudes / CV buffer</b>’ section. This only becomes active when the ‘<b>→ buffer</b>’ jack is connected. The CV coming in there is then recorded into a 4 second buffer.</p>
+      <p>As said the knob and input jacks with red labels all belong to the ‘<b>partial amplitudes / CV buffer</b>’ section. This only becomes active when the ‘<b>amp</b>’ jack is connected. The CV coming in there is then recorded into a 4 second buffer.</p>
 
       <p> There are three modes in the context menu. Let’s look at the ‘<b>low → high</b>’ mode first. Assume the <b>delay</b> time is set to a finite value. Then the lowest partial is attenuated. (This is the factor <i>a<sub>i</sub></i> in the wave formula.) by the current CV value (where 10 V corresponds to unity), 1 × the delay time later the next partial is attenuated by this value, 2 × the delay time later the next partial and so on. In other words: the incoming CV travels from the lowest partial upwards. If the delay is set to 0, all the partials are affected simultaneously, in other words: it works then as an overall VCA. If you turn the knob all the way right to <b>❄</b>, the buffer freezes and no CV is recorded.</p>
 
@@ -174,15 +174,15 @@
 
       <p>Some of the parameters can be pushed beyond the knob ranges with CV. The player can experiment with it to find out. Ad has a huge pitch compass, 9 octaves with the knob only, especially towards the lower side. The idea behind that is, to make it also possible to generate chords, rather than timbres. You can do this by selecting only a few partials by using the tilt (on the right side), number of partials and sieve parameters. It could also be interesting to play with this transition zone of harmony and timbre.</p>
 
-      <h4>Fundamental</h4>
+      <h4>Root</h4>
 
-      <p>There is an output for the fundamental wave. If the lowest partial ≥ 1 (i.e. the tilt parameter is past noon), the produced wave is shifted up by a corresponding number of octaves.</p>
+      <p>There is an output for the root / fundamental wave. If the lowest partial ≥ 1 (i.e. the tilt parameter is past noon), the produced wave is shifted up by a corresponding number of octaves.</p>
       
-      <p>It is not affected by FM, so you can use it for self-patching, for example into before mentioned FM input.</p>
+      <p>It is not affected by FM, so you can use it for patching it into the FM input.</p>
 
       <h4>Comb</h4>
 
-      <p>If the ‘→ buffer’ input is not connected, the delay knob (and the corresponding CV input) control a comb filter.</p>
+      <p>If the ‘amp’ input is not connected, the delay knob (and the corresponding CV input) control a comb filter.</p>
     </div>
 
     <div class="navigation">
