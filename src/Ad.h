@@ -58,6 +58,8 @@ struct Ad : Module {
 		SEMITONES,
 		OCTAVES
 	};
+	
+	Ad();
 
 	// Distribute the partials over the left and right channels, in such a way
 	// that for any value of the sieve parameter, the two channels are pretty much in
@@ -92,7 +94,7 @@ struct Ad : Module {
 		0, 1, 0, 0, 0, 1, 1, 0, 0, 0,
 		0, 0, 1, 1, 1, 0, 0
 	} };
-
+	
 	PitchQuant pitchQuant = CONTINUOUS;
 	AdditiveOscillator::StretchQuant stretchQuant = AdditiveOscillator::CONTINUOUS;
 	Spectrum::StereoMode stereoMode = Spectrum::SOFT_PAN;
@@ -112,8 +114,6 @@ struct Ad : Module {
 	Spectrum spec[16];
 	AdditiveOscillator osc[16];
 	SineOscillator fundOsc[16];
-
-	Ad();
 
 	json_t* dataToJson() override;
 	void dataFromJson(json_t* rootJ) override;

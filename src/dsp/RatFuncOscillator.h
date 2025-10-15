@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <iostream>
 #include "Oscillator.h"
 
 class RatFuncOscillator : public Oscillator<1, 2> {

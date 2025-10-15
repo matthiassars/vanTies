@@ -92,6 +92,9 @@ float RatFuncOscillator::phaseDistort2(float x) {
 }
 
 float RatFuncOscillator::phaseDistortInv1(float x) {
+  if (abs(c - .5f) < 1.e-6f)
+    return x;
+
   float y;
   if (c > .5f) {
     x -= floorf(x);
@@ -106,6 +109,9 @@ float RatFuncOscillator::phaseDistortInv1(float x) {
 }
 
 float RatFuncOscillator::phaseDistortInv2(float x) {
+  if (abs(c - .5f) < 1.e-6f)
+    return x;
+
   float y;
   if (c > .5f) {
     x -= floorf(x);
@@ -129,20 +135,19 @@ void RatFuncOscillator::setParams(float a, float b, float c) {
   // (lots of more or less educated guessing is going on here)
 
   // exclude values of c around 0 and 1
-  float d = min(8.f * abs((float)dPh[0]), .5f);
+  float d = min(16.f * abs((float)dPh[0]), .5f);
   c = min(max(c, d), 1.f - d);
 
-  // range of a (0, .5)
+  // range of a: (0, .5)
   a *= .5f;
   // exclude values of a around 0 and .5
-  d = min(4.f * abs((float)dPh[0] / min(c, 1.f - c)), .25f);
+  d = min(16.f * abs((float)dPh[0]), .25f);
   a = min(max(a, d), .5f - .5f * d);
 
   // range of b: (a, .5)
   b = a + (.5f - a) * b;
   // exclude values of b around a and .5
-  d = min(4.f * abs((float)dPh[0] / ((a - .5f) * min(c, 1.f - c))),
-    .25f - .5f * a);
+  d = min(16.f * abs((float)dPh[0]), .25f - .5f * a);
   b = min(max(b, a + d), .5f - d);
 
   this->a = a;
