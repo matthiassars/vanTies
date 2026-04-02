@@ -13,6 +13,7 @@ public:
   DynStochOscillator();
 
   static constexpr float RAND_MAX_INV = 1.f / RAND_MAX;
+  static constexpr float EPS = 1e-6f;
 
   void reset(bool randomize);
 
@@ -64,6 +65,9 @@ private:
   }
 
   inline float mirror(float x, float min, float max) {
+    if (max <= min + EPS)
+      return std::clamp(x, min, max);
+
     float diff2 = 2.f * (max - min);
     while (x < min)
       x += diff2;
