@@ -24,18 +24,27 @@ void DynStochOscillator::reset(bool randomize) {
 void DynStochOscillator::setSegments(int segments) {
   segments = max(segments, 2);
 
-  // only add or remove one element.
-  if (breakpoints.size() < segments + 1)
+  while (breakpoints.size() < static_cast<size_t>(segments + 1))
     insertBreakpoint();
-  else if (breakpoints.size() > segments + 1)
+  while (breakpoints.size() > static_cast<size_t>(segments + 1))
     eraseBreakpoint();
 
-  this->segments = breakpoints.size();
+  this->segments = static_cast<int>(breakpoints.size()) - 1;
   segmentsInv = 1.f / this->segments;
+
+  if (nextBp == breakpoints.end())
+    nextBp = next(breakpoints.begin());
+  computeSlope();
 }
 
 void DynStochOscillator::process() {
-  wave[0] = (dPh[0] < .5f * getLength()) ? intercept + slope * ph[0] : 0.f;
+  const float len = getLength();
+  if (len <= EPS) {
+    wave[0] = 0.f;
+    return;
+  }
+
+  wave[0] = (dPh[0] < .5f * len) ? intercept + slope * ph[0] : 0.f;
 
   ph[0] += dPh[0];
 
@@ -48,8 +57,8 @@ void DynStochOscillator::process() {
   }
 
   // move the phasor back into the function domain
-  while (ph[0] >= getLength()) {
-    ph[0] -= getLength();
+  while (ph[0] >= len) {
+    ph[0] -= len;
     nextBp = breakpoints.begin();
     wiggleEdgeBp();
   }
@@ -72,15 +81,22 @@ void DynStochOscillator::insertBreakpoint(bool random) {
 
 void DynStochOscillator::eraseBreakpoint() {
   auto prevBp = prev(nextBp);
-  if (prevBp != breakpoints.begin())
-    breakpoints.erase(prevBp);
-  else
-    breakpoints.erase(prev(breakpoints.end(), 2));
+  auto target = (prevBp != breakpoints.begin()) ? prevBp : prev(breakpoints.end(), 2);
+  if (target == nextBp)
+    nextBp = next(target);
+  breakpoints.erase(target);
 }
 
 void DynStochOscillator::computeSlope() {
   auto prevBp = prev(nextBp);
-  slope = (nextBp->a - prevBp->a) / (nextBp->t - prevBp->t);
+  const float dt = nextBp->t - prevBp->t;
+  if (fabsf(dt) <= EPS) {
+    slope = 0.f;
+    intercept = prevBp->a;
+    return;
+  }
+
+  slope = (nextBp->a - prevBp->a) / dt;
   intercept = prevBp->a - prevBp->t * slope;
 }
 
@@ -122,6 +138,9 @@ void DynStochOscillator::wiggleEdgeBp() {
     // no frequencies lower that 2 octaves below
     min(next(breakpoints.begin())->t + getLength(), 2.f)
   );
+  auto last = prev(breakpoints.end());
+  const float minLastT = max(prev(breakpoints.end(), 2)->t + EPS, 4.f * (float)dPh[0]);
+  last->t = max(last->t, minLastT);
 
   // wiggle amp component
   d = -breakpoints.front().a;
